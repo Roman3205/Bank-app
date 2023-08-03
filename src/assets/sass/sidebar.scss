@@ -1,0 +1,54 @@
+@mixin flex-mix($direction, $justify, $align, $gap) {
+    display: flex;
+    flex-direction: $direction;
+    justify-content: $justify;
+    align-items: $align;
+    gap: $gap;
+}
+
+.container .logo {
+    height: fit-content;
+    width: fit-content;
+}
+
+.container {
+    padding: 25px 0px;
+    @include flex-mix(column, space-between, center, 30px);
+
+    p {
+        font-size: 15.5px;
+        margin: 0;
+    }
+
+    h2 {
+        margin: 0;
+        font-size: 17px;
+    }
+}
+
+.buttons, .menu-board, .dark-mode {
+    @include flex-mix(column, space-between, center, 15px)
+}
+
+.buttons, .menu-board, .dark-mode {
+    width: 100%;
+    margin-bottom: 10px;
+}
+
+.buttons button, .menu-board button, .dark-mode button {
+    width: 85%;
+    border-width: 2px;
+    transition: 0.8s ease;
+    @include flex-mix(row, left, center, 10px);
+    padding-left: 25px;
+    font-size: 15px;
+}
+
+.dark-mode label {
+    @include flex-mix(row, left, center, 15px);
+}
+
+.user {
+    @include flex-mix(row, center, center, 20px);
+    cursor: pointer;
+}
