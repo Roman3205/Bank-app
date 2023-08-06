@@ -1,0 +1,296 @@
+@mixin flex-mix($direction, $justify, $align, $gap) {
+    display: flex;
+    flex-direction: $direction;
+    justify-content: $justify;
+    align-items: $align;
+    gap: $gap;
+}
+
+h2, h5, p {
+    margin: 0;
+}
+
+.container {
+    padding: 40px;
+    @include flex-mix(row, space-between, none, 50px);
+}
+
+.left, .right {
+    @include flex-mix(column, none, none, 30px)
+}
+
+.right {
+    gap: 37px;
+}
+
+.block-top {
+    @include flex-mix(row, none, none, 30px)
+}
+
+.finance, .statistics, .transactions-history, .wallet-block, .spent-diagram {
+    border-radius: 10px;
+    background-color: #fff;
+    height: fit-content;
+    padding: 10px 20px 15px 20px;
+    width: fit-content;
+    @include flex-mix(column, none, none, 10px);
+}
+
+.blocks {
+    @include flex-mix(row, left, none, 0);
+
+    .balance, .spent, .saving {
+        border-radius: 5px;
+        background-color: lightgray;
+        padding: 5px 10px;
+        color: #e4e4e4;
+        font-size: 17.8px;
+    }
+
+    .balance {
+        background-color: rgb(78, 78, 250);
+    }
+
+    .spent {
+        background-color: #5397d6;
+    }
+
+    .saving {
+        background-color: #4cc790;
+    }
+}
+
+.fa-rub {
+    margin-top: 2px;
+}
+
+.transactions-history {
+    width: 734px;
+}
+
+.transactions-history .blocks {
+    flex-direction: column;
+
+    .titles, .transaction {
+        @include flex-mix(row, left, center, 0px);
+    }
+
+    .titles {
+        border: 2px solid lightgray;
+        padding: 5px 0px;
+
+        p:nth-child(1) {
+            margin-left: 20px;
+        }
+    
+        p:nth-child(2) {
+            margin-left: 113px;
+        }
+
+        p:nth-child(3) {
+            margin-left: 110px;
+        }
+
+        p:nth-child(4) {
+            margin-left: 42px;
+        }
+
+        p:nth-child(5) {
+            margin-left: 33px;
+        }
+    }
+}
+
+.transactions-block {
+    @include flex-mix(column, none, none, 7px);
+    margin-top: 10px;
+}
+
+.transaction {
+    padding: 0px 15px;
+    gap: 0px!important;
+    justify-content: space-between!important;
+    
+    .date, .id, .money, .status {
+        font-size: 13.5px;
+    }
+
+    .name {
+        @include flex-mix(row, none, center, 7px);
+    }
+}
+
+.wallet-block .card {
+    background: url('../assets/images/cardWallet.png') no-repeat center center;
+    border-radius: 10px;
+    color: #fff;
+    background-size: 100% 100%;
+    width: 340px;
+    height: 180px;
+
+    p:nth-child(1) {
+        position: absolute;
+        top: 22px;
+        left: 12px;
+    }
+
+    p:nth-child(2) {
+        position: absolute;
+        bottom: 10px;
+        right: 23px;
+    }
+
+    p:nth-child(3) {
+        font-size: 27.5px;
+        position: absolute;
+        bottom: 55px;
+        left: 12px;
+    }
+}
+
+.wallet-block {
+    width: 380px;
+
+    select {
+        border: 3px solid lightgray;
+        border-radius: 10px;
+        box-shadow: none;
+        outline: none;
+        padding: 7px 10px;
+    }
+    
+    .rub {
+        width: fit-content;
+        height: fit-content;
+        padding: 3px 5px 0px 5px;
+        border-radius: 7px;
+        background-color: #4cc790;
+        color: #fff;
+    }
+}
+
+.rub-m {
+    @include flex-mix(row, none, center, 8px);
+
+    .fa-rub {
+        margin: 0;
+    }
+}
+
+.spent-diagram h2 {
+    line-height: 25px;
+    padding-top: 2.5px;
+}
+
+.spent-diagram span {
+    font-size: 17px;
+}
+
+.money-wallet {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+
+    p {
+        margin: 0;
+    }
+}
+
+.percent {
+	display: block;
+	width: 150px;
+	height: 150px;
+}
+
+.text-block-info {
+    width: fit-content;
+    margin-left: 30px;
+    margin-top: -92px;
+
+    h2 {
+        width: fit-content;
+        font-size: 32px;
+        
+        .fa-rub {
+            font-size: 28px;
+        }
+    }
+}
+
+.stat {
+    height: 140px;
+    width: 40px;
+    display: flex;
+    gap: 7px;
+    transform: rotate(-180deg);
+}
+
+.top-up, .withdrawals {
+    width: 20px;
+    background-color: rgb(78, 78, 250);
+    border-radius: 4px;
+    display: flex;
+}
+
+.withdrawals {
+    background-color: #5397d6;
+}
+
+.month {
+    @include flex-mix(column, none, center, 0);
+}
+
+.time {
+    @include flex-mix(row, none, center, 20px);
+    align-self: flex-end;
+    font-size: 14px;
+    margin-left: 10px
+}
+
+.withdraw .category {
+    @include flex-mix(row, none, center, 15px);
+}
+
+.withdraw {
+    margin-left: 15px;
+}
+
+.one, .two, .three, .four {
+    width: 20px;
+    height: 10px;
+    border-radius: 3px;
+}
+
+.one {
+	background-color: #915db1;
+}
+
+.two {
+	background-color: #e59f3c;
+}
+
+.three {
+	background-color: #5397d6;
+}
+
+.four {
+	background-color: #4cc790;
+}
+
+.circle {
+	stroke: #915db1;
+	fill: none;
+	stroke-width: 3;
+}
+
+.circle:nth-child(2) {
+	stroke: #e59f3c;
+}
+
+.circle:nth-child(3) {
+	stroke: #5397d6;
+}
+
+.circle:nth-child(4) {
+	stroke: #4cc790;
+}

@@ -2,7 +2,6 @@ import { createRouter, createWebHistory } from "vue-router";
 import CardPage from './views/CardPage.vue'
 import DashBoard from './views/DashBoard.vue'
 import SupportPage from './views/SupportPage.vue'
-import WalletPage from './views/WalletPage.vue'
 import TransactionsPage from './views/TransactionsPage.vue'
 import LoginPage from './views/LoginPage.vue'
 import SingUpPage from './views/SignUpPage.vue'
@@ -30,11 +29,6 @@ let router = createRouter({
             path: '/support',
             name: 'support',
             component: SupportPage
-        },
-        {
-            path: '/wallet',
-            name: 'wallet',
-            component: WalletPage
         },
         {
             path: '/transactions',

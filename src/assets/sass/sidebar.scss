@@ -9,11 +9,12 @@
 .container .logo {
     height: fit-content;
     width: fit-content;
+    cursor: pointer;
 }
 
 .container {
     padding: 25px 0px;
-    @include flex-mix(column, space-between, center, 30px);
+    @include flex-mix(column, space-between, center, 45px);
 
     p {
         font-size: 15.5px;

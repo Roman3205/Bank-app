@@ -1,0 +1,128 @@
+@import './dashboard.scss';
+
+.container {
+    @include flex-mix(column, none, none, 40px);
+    padding-bottom: 70px;
+}
+
+.transactions-history {
+    width: 100%;
+}
+
+.payments {
+    background-color: #fff;
+    border-radius: 10px;
+    padding: 10px 20px 50px 20px;
+    @include flex-mix(column, none, none, 20px);
+
+    input {
+        height: 60px;
+        width: 100%;
+        font-size: 20px;
+        border-width: 2.5px;
+    }
+}
+
+.submit {
+    @include flex-mix(row, space-between, center, 0);
+
+    button {
+        height: 60px;
+        width: 160px;
+        text-align: center;
+        border-width: 3px;
+        font-size: 23px;
+        transition: 0.7s ease
+    }
+}
+
+.choice {
+    @include flex-mix(row, none, none, 30px);
+
+    .with-tel, .with-card {
+        background-color: #e1e1e1;
+        border-radius: 10px;
+        cursor: pointer;
+        padding: 10px 13px;
+        @include flex-mix(column, none, none, 20px);
+
+        .top {
+            @include flex-mix(row, space-between, center, 0);
+        }
+
+        input {
+            width: 20px;
+            height: 20px;
+        }
+    }
+
+    .with-card {
+        img {
+            width: 40px;
+        }
+    }
+
+    .with-tel {
+        img {
+            width: 25px;
+        }
+    }
+}
+
+.payment-to {
+    @include flex-mix(row, space-between, none, 0);
+
+    i {
+        align-self: center;
+        font-size: 30px;
+    }
+
+    .from, .to {
+        background-color: #e1e1e1;
+        border-radius: 10px;
+        padding: 30px 25px 60px 25px;
+        @include flex-mix(column, none, none, 50px);
+
+        input {
+            height: 60px;
+            width: 370px;
+            font-size: 20px;
+        }
+    }
+}
+
+.transaction {
+    background-color: lightgray;
+    border-radius: 10px;
+    padding: 10px 10px!important;
+    padding: 0px 20px;
+}
+
+.date, .id, .money, .status {
+    font-size: 18px!important;
+}
+
+.transactions-block {
+    gap: 20px;
+}
+
+.titles {
+    padding: 0px 60px!important;
+    justify-content: space-between!important;
+}
+
+.nav-info {
+    @include flex-mix(row, space-between, center, 0);
+
+    img {
+        border-radius: 2px;
+    }
+}
+
+select {
+    border: 3px solid lightgray;
+    border-radius: 10px;
+    box-shadow: none;
+    outline: none;
+    padding: 7px 10px;
+}
