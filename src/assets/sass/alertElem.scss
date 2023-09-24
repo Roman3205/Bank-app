@@ -1,0 +1,19 @@
+.alert[data-67cdadw] {
+    position: fixed;
+    top: 30px;
+    width: 300px;
+    left: calc(50% - 155px);
+    border: 2px solid gray;
+    right: 50%;
+}
+
+.alert-enter-from {
+    opacity: 0;
+    transition: all .7s ease-out;
+    transform: translateY(-50px);
+}
+
+.alert-enter-to {
+    opacity: 1;
+    transition: all .7s ease-out;
+}

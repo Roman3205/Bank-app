@@ -21,6 +21,8 @@ export default {
 </template>
 
 <style scoped lang="scss">
+    @import '@/assets/sass/blackmode.scss';
+
     .container {
         width: 100%;
         height: 100vh;

@@ -40,7 +40,7 @@ export default {
             <div class="choice">
                 <label class="with-card" for="checkCard" @click="selectPaymentWay('card')">
                     <div class="top">
-                        <img src="../assets/images/card.png" alt="">
+                        <img src="@/assets/images/card.png" alt="">
                         <div class="form-check">
                             <input class="form-check-input" name="choice" type="radio" id="checkCard" :checked="paymentWayCard">
                         </div>
@@ -49,7 +49,7 @@ export default {
                 </label>
                 <label class="with-tel" for="checkTel" @click="selectPaymentWay('tel')">
                     <div class="top">
-                        <img src="../assets/images/tel.png" alt="">
+                        <img src="@/assets/images/tel.png" alt="">
                         <div class="form-check">
                             <input class="form-check-input" name="choice" type="radio" id="checkTel" :checked="paymentWayTel">
                         </div>
@@ -80,21 +80,19 @@ export default {
                     <input v-model="payTelTo" type="tel" required pattern="[0-9]{16}" class="form-control" maxlength="16" placeholder="Номер телефона получателя">
                 </div>
             </div>
-            <input type="number" class="form-control" min="5" max="10000" placeholder="Сумма, руб.">
+            <my-input-card min="5" max="10000" placeholder="Сумма, руб." type="number"></my-input-card>
             <hr>
             <div class="submit">
                 <p class="text-secondary">Нажимая на кнопку «Перевести», вы соглашаетесь<br> с условиями публичной оферты</p>
-                <button class="btn btn-outline-primary">Перевести</button>
+                <my-button-reg>Перевести</my-button-reg>
             </div>
         </form>
         <div class="transactions-history">
             <div class="nav-info">
                 <h2 class="mb-3"><b>Операции</b><h5 class="text-secondary">(всего 3 операции по данной карте)</h5></h2>
-                <h4>По карте: <img src="../assets/images/cardWallet.png" width="50" alt=""> <select>
-                        <option>2022 2013 8847 2819</option>
-                        <option>3212 2013 8237 2819</option>
-                    </select>
-                </h4>
+                <div class="d-block"><div class="d-flex gap-3 align-items-center"><h4 style="margin: 0;">По карте:</h4><img src="@/assets/images/cardWallet.png" width="50" alt=""></div>
+                    <my-select class="mt-1"></my-select>
+                </div>
             </div>
             <div class="blocks">
                 <div class="titles">
@@ -107,7 +105,7 @@ export default {
                 <div class="transactions-block">
                     <div class="transaction" v-for="index in 3">
                         <div class="name">
-                            <img src="../assets/images/user.png" width="30" alt="">
+                            <img src="@/assets/images/user.png" width="30" alt="">
                             <p><b>Роман</b></p>
                         </div>
                         <div class="date">
@@ -130,6 +128,7 @@ export default {
 </template>
 
 <style scoped lang="scss">
-    @import '../assets/sass/transaction.scss';
+    @import '@/assets/sass/transaction.scss';
+    @import '@/assets/sass/blackmode.scss';
 
 </style>

@@ -1,11 +1,12 @@
 import { createRouter, createWebHistory } from "vue-router";
-import CardPage from './views/CardPage.vue'
-import DashBoard from './views/DashBoard.vue'
-import SupportPage from './views/SupportPage.vue'
-import TransactionsPage from './views/TransactionsPage.vue'
-import LoginPage from './views/LoginPage.vue'
-import SingUpPage from './views/SignUpPage.vue'
-import NotFoundPage from './views/NotFoundPage.vue'
+import CardPage from '@/views/CardPage.vue'
+import DashBoard from '@/views/DashBoard.vue'
+import SupportPage from '@/views/SupportPage.vue'
+import TransactionsPage from '@/views/TransactionsPage.vue'
+import LoginPage from '@/views/LoginPage.vue'
+import SingUpPage from '@/views/SignUpPage.vue'
+import NotFoundPage from '@/views/NotFoundPage.vue'
+import RestorePage from '@/views/RestorePage.vue'
 
 let router = createRouter({
     history: createWebHistory(),
@@ -19,6 +20,11 @@ let router = createRouter({
             path: '/statistics/dashboard',
             name: 'dashboard',
             component: DashBoard
+        },
+        {
+            path: '/restore-password',
+            name: 'restore',
+            component: RestorePage
         },
         {
             path: '/cards',
@@ -51,6 +57,21 @@ let router = createRouter({
             component: NotFoundPage
         }
     ]
+})
+
+let avoidRoutes = [
+    'dashboard',
+    'cards',
+    'support',
+    'transactions'
+]
+
+router.beforeEach((from, to, next) => {
+    if(!window.$cookies.isKey('cookie-auth') && avoidRoutes.includes(from.name)) {
+        router.push('/login')
+    } else {
+        next()
+    }
 })
 
 export default router

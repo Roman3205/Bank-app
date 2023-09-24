@@ -16,7 +16,7 @@ h2, h5, p {
 }
 
 .left, .right {
-    @include flex-mix(column, none, none, 30px)
+    @include flex-mix(column, none, none, 52px)
 }
 
 .right {
@@ -33,7 +33,7 @@ h2, h5, p {
     height: fit-content;
     padding: 10px 20px 15px 20px;
     width: fit-content;
-    @include flex-mix(column, none, none, 10px);
+    @include flex-mix(column, none, none, 15px);
 }
 
 .blocks {
@@ -84,7 +84,7 @@ h2, h5, p {
         }
     
         p:nth-child(2) {
-            margin-left: 113px;
+            margin-left: 115px;
         }
 
         p:nth-child(3) {
@@ -107,8 +107,10 @@ h2, h5, p {
 }
 
 .transaction {
-    padding: 0px 15px;
     gap: 0px!important;
+    cursor: pointer;
+    border: 1px solid lightgray;
+    padding: 5px 15px;
     justify-content: space-between!important;
     
     .date, .id, .money, .status {
@@ -121,7 +123,7 @@ h2, h5, p {
 }
 
 .wallet-block .card {
-    background: url('../assets/images/cardWallet.png') no-repeat center center;
+    background: url('@/assets/images/cardWallet.png') no-repeat center center;
     border-radius: 10px;
     color: #fff;
     background-size: 100% 100%;

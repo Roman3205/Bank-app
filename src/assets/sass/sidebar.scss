@@ -17,13 +17,13 @@
     @include flex-mix(column, space-between, center, 45px);
 
     p {
-        font-size: 15.5px;
+        font-size: 0.7rem!important;
         margin: 0;
     }
 
     h2 {
         margin: 0;
-        font-size: 17px;
+        font-size: 17px!important;
     }
 }
 
@@ -36,15 +36,6 @@
     margin-bottom: 10px;
 }
 
-.buttons button, .menu-board button, .dark-mode button {
-    width: 85%;
-    border-width: 2px;
-    transition: 0.8s ease;
-    @include flex-mix(row, left, center, 10px);
-    padding-left: 25px;
-    font-size: 15px;
-}
-
 .dark-mode label {
     @include flex-mix(row, left, center, 15px);
 }
@@ -52,4 +43,14 @@
 .user {
     @include flex-mix(row, center, center, 20px);
     cursor: pointer;
+    border: 1px solid gray;
+    width: 85%;
+    padding: 10px;
+    border-radius: 10px;
+
+    .data {
+        h2 {
+            font-size: 20px;
+        }
+    }
 }

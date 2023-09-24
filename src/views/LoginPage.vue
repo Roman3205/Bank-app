@@ -1,12 +1,18 @@
 <script>
+import InfoBlock from '@/components/InfoBlock.vue'
+import axios from 'axios'
 
 export default {
     data() {
-
+        return {
+            mail: '',
+            password: '',
+            loginMessage: ''
+        }
     },
 
-    mounted() {
-
+    components: {
+        InfoBlock
     },
 
     methods: {
@@ -15,6 +21,45 @@ export default {
             this.$router.push({
                 name: goTo
             })
+        },
+
+        async loginAction() {
+            try {
+                this.loginMessage = ''
+
+                if(this.loginValid) {
+                    return this.loginMessage = 'Произошла ошибка в заполнении'
+                }
+
+                await axios.post('/logout')
+                this.$cookies.remove('cookie-auth', '/', '')
+
+                let response = await axios.post('/login', {
+                    mail: this.mail,
+                    password: this.password
+                })
+
+                this.loginMessage = 'Вы вошли в аккаунт'
+        
+                await new Promise(prom => setTimeout(prom, 900)).then(() => {
+                    this.$cookies.set('cookie-auth', response.data, '1d', '/', '', true, 'none')
+                    this.$router.push('/')
+                })
+
+            } catch (error) {
+                if(error.response) {
+                    this.loginMessage = error.response.data
+                    console.log('Ошибка при отправке запроса на сервер:(', error)
+                } else {
+                    return
+                }
+            }
+        }
+    },
+
+    computed: {
+        loginValid() {
+            return this.password === '' || this.mail === ''
         }
     }
 }
@@ -22,23 +67,25 @@ export default {
 </script>
 
 <template>
-    <div class="container">
-        <form autocomplete="off" class="menu-content">
-            <h2>Вход в МикроБанк</h2>
-            <div class="input-block">
-                <input type="email" class="form-control" placeholder="Почта" autocomplete="off">
-                
-            </div>
-            <div class="input-block">
-                <input type="password" class="form-control" placeholder="Пароль" autocomplete="new-password">
-                <p>Не помню пароль</p>
-            </div>
-            <button class="btn btn-info" type="submit">Войти</button>
-            <button class="btn btn-secondary" @click="routerAction($event, 'register')">Стать клиентом</button>
-        </form>
+    <div class="row gap-5">
+        <div class="container">
+            <form @submit.prevent="loginAction" autocomplete="off" class="menu-content">
+                <h2>Вход в МикроБанк</h2>
+                <my-input v-model="mail" placeholder="Почта" type="email"></my-input>
+                <div>
+                    <my-input v-model="password" type="password" placeholder="Пароль" autocomplete="new-password"></my-input>
+                    <p class="mt-2" @click="routerAction($event, 'restore')">Не помню пароль</p>
+                </div>
+                <my-button-reg type="submit">Войти</my-button-reg>
+                <my-button-reg type="button" class="btn-secondary" @click="routerAction($event, 'register')">Стать клиентом</my-button-reg>
+            </form>
+            <transition name="alert"><div v-if="this.loginMessage !== ''" data-67cdadw class="alert text-center" :class="this.loginMessage === 'Вы вошли в аккаунт' ? 'alert-success' : 'alert-danger'">{{ loginMessage }}</div></transition>
+        </div>
+        <info-block></info-block>
     </div>
 </template>
 
 <style scoped lang="scss">
-    @import '../assets/sass/auth.scss';
+    @import '@/assets/sass/auth.scss';
+    @import '@/assets/sass/alertElem.scss';
 </style>

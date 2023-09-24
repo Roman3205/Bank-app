@@ -1,5 +1,9 @@
 import axios from 'axios'
-axios.defaults.baseURL = 'http://localhost:3007'
+const host = import.meta.env.VITE_BACKEND_HOST
+const port = import.meta.env.VITE_BACKEND_PORT
+
+axios.defaults.baseURL = 'http://' + host + ':' + port
+axios.defaults.withCredentials = true
 
 import dayjs from 'dayjs'
 import 'dayjs/locale/ru'
@@ -9,8 +13,25 @@ dayjs.extend(relativeTime)
 dayjs.locale('ru')
 
 import { createApp } from 'vue'
-import App from './App.vue'
-import router from './router.js'
-import store from './store.js'
+import App from '@/App.vue'
+import router from '@/router/router.js'
+import store from '@/store/store.js'
+import UI from '@/components/UI/ui.js'
+import directives from '@/directives/directives'
+import VueCookies from "vue-cookies"
 
-createApp(App).use(router).use(store).mount('#app')
+const app = createApp(App)
+
+UI.forEach(componentUI => {
+    app.component(componentUI.name, componentUI)
+})
+
+directives.forEach(directive => {
+    app.directive(directive.name, directive)
+})
+
+app
+    .use(router)
+    .use(store)
+    .use(VueCookies)
+    .mount('#app')

@@ -1,20 +1,73 @@
 <script>
+import InfoBlock from '@/components/InfoBlock.vue'
+import axios from 'axios'
 
 export default {
     data() {
-
+        return {
+            name: '',
+            mail: '',
+            password: '',
+            passwordConfirm: '',
+            regMessage: ''
+        }
     },
 
-    mounted() {
-
+    components: {
+        InfoBlock
     },
 
     methods: {
+        async registerAction() {
+            try {
+                this.regMessage = ''
+
+                if(this.regValid) {
+                    return this.regMessage = 'Произошла ошибка в заполнении'
+                } else if(this.password !== this.passwordConfirm) {
+                    return this.regMessage = 'Пароли не совпадают'
+                }
+
+                await axios.post('/logout')
+                this.$cookies.remove('cookie-auth', '/', '')
+
+                await axios.post('/registration', {
+                    name: this.name,
+                    mail: this.mail,
+                    password: this.password
+                })
+
+                this.name = ''
+                this.mail = ''
+                this.password = ''
+
+                this.regMessage = 'Регистрация прошла успешно'
+
+                await new Promise(prom => setTimeout(prom, 900)).then(() => {
+                    this.$router.push('/login')
+                })
+
+            } catch (error) {
+                if(error.response) {
+                    this.loginMessage = error.response.data
+                    console.log('Ошибка при отправке запроса на сервер:(', error)
+                } else {
+                    return
+                }
+            }
+        },
+
         routerAction(evt, goTo) {
             evt.preventDefault()
             this.$router.push({
                 name: goTo
             })
+        }
+    },
+
+    computed: {
+        regValid() {
+            return this.name === '' || this.password === '' || this.mail === '' || this.password.length < 5 || this.name.length < 2
         }
     }
 }
@@ -22,33 +75,36 @@ export default {
 </script>
 
 <template>
-    <div class="container">
-        <form autocomplete="off" class="menu-content">
-            <h2>Регистрация</h2>
-            <div class="input-block">
-                <input type="name" class="form-control" placeholder="Ваше имя" autocomplete="off">
-            </div>
-            <div class="input-block">
-                <input type="email" class="form-control" placeholder="Почта" autocomplete="off">
-            </div>
-            <div class="d-flex input-block">
-                <input v-model="tel" type="tel" required pattern="[+][7][9][0-9]{9}" placeholder="Например, +79001234567" class="form-control"><span class="validity"></span>
-            </div>
-            <div class="input-block">
-                <input type="password" class="form-control" placeholder="Пароль" autocomplete="off">
-            </div>
-            <div class="input-block">
-                <input type="password" class="form-control" placeholder="Подтвердите пароль" autocomplete="off">
-            </div>
-            <button class="btn btn-info" type="submit">Зарегистрироваться</button>
-        </form>
+    <div class="row gap-5">
+        <div class="container">
+            <form @submit.prevent="registerAction" autocomplete="off" class="menu-content">
+                <h2>Регистрация</h2>
+                <my-input v-model="name" type="text" placeholder="Ваше имя"></my-input>
+                <my-input v-model="mail" type="email" placeholder="Почта"></my-input>
+                <my-input v-model="password" type="password" placeholder="Пароль"></my-input>
+                <my-input v-model="passwordConfirm" type="password" placeholder="Подтвердите пароль"></my-input>
+                <my-button-reg>Зарегистрироваться</my-button-reg>
+            </form>
+            <transition name="alert"><div v-if="this.regMessage !== ''" data-67cdadw class="alert text-center" :class="this.regMessage === 'Регистрация прошла успешно' ? 'alert-success' : 'alert-danger'">{{ regMessage }}</div></transition>
+        </div>
+        <info-block></info-block>
     </div>
 </template>
 
 <style scoped lang="scss">
-    @import '../assets/sass/auth.scss';
+    @import '@/assets/sass/auth.scss';
+    @import '@/assets/sass/alertElem.scss';
+
+    .alert {
+        position: fixed;
+        top: 30px;
+        left: 530px;
+        right: 530px;
+        width: 300px;
+    }
+
     .menu-content {
-        height: 635px;
+        height: 570px;
         
         p {
             margin: 0;

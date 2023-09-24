@@ -1,4 +1,5 @@
 <script>
+import { mapState } from 'vuex'
 
 export default {
     data() {
@@ -19,10 +20,18 @@ export default {
                     topUp: 35,
                     withdraw: 50
                 }
-            ]
+            ],
+
+            selectedCard: ''
         }
+    },
+
+    computed: {
+        ...mapState({
+            user: state => state.mainModule.user
+        })
     }
-}
+ }
 
 </script>
 
@@ -34,31 +43,29 @@ export default {
                     <div class="blocks">
                         <div class="balance me-2">
                             <p>Пополнения</p>
-                            <p class="rub-m"><b>23212</b><b><i class="fa fa-rub"></i></b></p>
+                            <p class="rub-m"><b>{{ user.depositsAll }}</b><b><i class="fa fa-rub"></i></b></p>
                         </div>
                         <div class="spent me-2">
                             <p>Затраты</p>
-                            <p class="rub-m"><b>5212</b><b><i class="fa fa-rub"></i></b></p>
+                            <p class="rub-m"><b>{{ user.expensesAll }}</b><b><i class="fa fa-rub"></i></b></p>
                         </div>
                         <div class="saving">
                             <p>Сбережения</p>
-                            <p class="rub-m"><b>1322</b><b><i class="fa fa-rub"></i></b></p>
+                            <p class="rub-m"><b>{{ user.savingsAll }}</b><b><i class="fa fa-rub"></i></b></p>
                         </div>
                     </div>
                 </div>
-                <div class="wallet-block">
-                <h2><b>Мой кошелек</b></h2>
-                <select>
-                    <option>2022 2013 8847 2819</option>
-                    <option>3212 2013 8237 2819</option>
-                </select>
-                <div class="card">
-                    <p>Роман Романов</p>
-                    <p>06/30</p>
-                    <p><b>2131 3103 8130 1210</b></p>
-                </div>
-                <h5><b>Счет карты</b></h5>
-                <div class="money-wallet"><div class="rub"><i class="fa fa-rub"></i></div><p class="rub-m"><b>2 102,03</b> <i class="fa fa-rub"></i></p></div>
+                <div class="wallet-block" v-if="user.cards">
+                    <h2><b>Мой кошелек</b></h2>
+                    <my-select v-model="selectedCard" :cards="user.cards"></my-select>
+                    <div class="card" v-if="user.cards.length != 0">
+                        <p>Роман Романов</p>
+                        <p>06/30</p>
+                        <p><b>2131 3103 8130 1210</b></p>
+                    </div>
+                    <h5><b>Счет карты</b></h5>
+                    <span v-if="user.cards.length == 0">У вас нет ни одной карты</span>
+                    <div v-else class="money-wallet"><div class="rub"><i class="fa fa-rub"></i></div><p class="rub-m"><b>2 102,03</b> <i class="fa fa-rub"></i></p></div>
             </div>
         </div>
         <div class="right">
@@ -137,9 +144,10 @@ export default {
                         <p>Статус</p>
                     </div>
                     <div class="transactions-block">
-                        <div class="transaction" v-for="index in 3">
+                        <span>По выбранной карте нет транзакций</span>
+                        <!-- <div class="transaction" v-for="index in 3">
                             <div class="name">
-                                <img src="../assets/images/user.png" width="30" alt="">
+                                <img src="@/assets/images/user.png" width="30" alt="">
                                 <p><b>Роман</b></p>
                             </div>
                             <div class="date">
@@ -154,7 +162,7 @@ export default {
                             <div class="status">
                                 <p class="text-success">Выполнено</p>
                             </div>
-                        </div>
+                        </div> -->
                     </div>
                 </div>
             </div>
@@ -163,6 +171,7 @@ export default {
 </template>
 
 <style scoped lang="scss">
-    @import '../assets/sass/dashboard.scss';
+    @import '@/assets/sass/dashboard.scss';
+    @import '@/assets/sass/blackmode.scss';
 
 </style>

@@ -1,14 +1,27 @@
 <script>
 
-import NavSideBar from './components/NavSideBar.vue'
-import InfoBlock from './components/InfoBlock.vue'
-import { RouterView } from 'vue-router';
+import NavSideBar from '@/components/NavSideBar.vue'
+import InfoBlock from '@/components/InfoBlock.vue'
+import { RouterView } from 'vue-router'
+import CookieInfo from '@/components/CookieInfo.vue'
+import { mapActions } from 'vuex'
 
 export default {
   components: {
     NavSideBar,
     RouterView,
-    InfoBlock
+    InfoBlock,
+    CookieInfo
+  },
+
+  created() {
+    if (!localStorage.getItem('cookieAlert')) {
+      localStorage.setItem('cookieAlert', true)
+    } else if (localStorage.getItem('cookieAlert')) {
+      this.cookieAlert = true ? localStorage['cookieAlert'] === 'true' : false
+    } else {
+      return
+    }
   },
 
   computed: {
@@ -17,8 +30,29 @@ export default {
     },
 
     Auth() {
-      return this.$route.name === 'login' || this.$route.name === 'register'
+      return this.$route.name === 'login' || this.$route.name === 'register' || this.$route.name === 'restore'
     }
+  },
+  
+  methods: {
+    cookieAction(val) {
+      localStorage['cookieAlert'] = val
+      this.cookieAlert = val
+    },
+
+    ...mapActions({
+      loadUser: 'mainModule/loadUser'
+    }),
+  },
+
+  data() {
+    return {
+      cookieAlert: true
+    }
+  },
+
+  mounted() {
+    this.loadUser()
   }
 }
 
@@ -32,19 +66,19 @@ export default {
     <div class="main-content">
       <router-view></router-view>
     </div>
+    <!-- <teleport to="body"> -->
+      <cookie-info v-model:cookieAlert="this.cookieAlert" @accept="cookieAction"></cookie-info>
+    <!-- </teleport> -->
   </div>
-  <router-view v-if="NotFound"></router-view>
-  <div class="auth-menu" v-if="Auth">
-    <div class="router col-lg-6">
+  <router-view v-else-if="NotFound"></router-view>
+  <div class="auth-menu" v-else-if="Auth">
       <router-view></router-view>
-    </div>
-    <div class="content-block col-lg-6">
-      <info-block></info-block>
-    </div>
   </div>
 </template>
 
 <style scoped lang="scss">
+@import '@/assets/sass/blackmode.scss';
+
   * {
     overflow-x: hidden;
     box-sizing: border-box;
@@ -54,7 +88,7 @@ export default {
     display: flex;
     justify-content: center;
     width: 100%;
-    height: 100vh;
+    height: 100vh!important;
     font-family: monospace, 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
   }
 
@@ -66,6 +100,17 @@ export default {
   .main-content {
     width: 82%;
     background-color: lightgray;
+  }
+
+  .main-content::-webkit-scrollbar-thumb {
+      width: 12px;
+      border-radius: 20px;
+      background: rgb(13,110,253);
+  }
+
+  .main-content::-webkit-scrollbar {
+      background: rgb(177, 208, 255);
+      border-radius: 20px;
   }
 
   .auth-menu {
@@ -83,10 +128,9 @@ export default {
       flex-direction: column;
       gap: 80px;
       height: 100%;
-      padding: 60px 0px;
     }
 
-    .router, .content-block {
+    .content-block {
       align-self: center;
     }
   }

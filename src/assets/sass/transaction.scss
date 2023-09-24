@@ -14,13 +14,6 @@
     border-radius: 10px;
     padding: 10px 20px 50px 20px;
     @include flex-mix(column, none, none, 20px);
-
-    input {
-        height: 60px;
-        width: 100%;
-        font-size: 20px;
-        border-width: 2.5px;
-    }
 }
 
 .submit {
@@ -32,7 +25,7 @@
         text-align: center;
         border-width: 3px;
         font-size: 23px;
-        transition: 0.7s ease
+        transition: 0.7s ease;
     }
 }
 
@@ -107,7 +100,7 @@
 }
 
 .titles {
-    padding: 0px 60px!important;
+    padding: 0px 40px!important;
     justify-content: space-between!important;
 }
 
