@@ -1,6 +1,7 @@
 <script>
 import InfoBlock from '@/components/InfoBlock.vue'
 import axios from 'axios'
+import { mapActions } from 'vuex'
 
 export default {
     data() {
@@ -16,6 +17,10 @@ export default {
     },
 
     methods: {
+        ...mapActions({
+            loadUser: 'mainModule/loadUser'
+        }),
+
         routerAction(evt, goTo) {
             evt.preventDefault()
             this.$router.push({
@@ -44,6 +49,7 @@ export default {
                 await new Promise(prom => setTimeout(prom, 900)).then(() => {
                     this.$cookies.set('cookie-auth', response.data, '1d', '/', '', true, 'none')
                     this.$router.push('/')
+                    this.loadUser()
                 })
 
             } catch (error) {

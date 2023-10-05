@@ -1,4 +1,6 @@
 <script>
+import axios from 'axios'
+import {mapState} from 'vuex'
 
 export default {
     data() {
@@ -8,7 +10,10 @@ export default {
             payTelFrom: '',
             payTelTo: '',
             payCardFrom: '',
-            payCardTo: ''
+            payCardTo: '',
+            createMessage: '',
+            loadingCreate: undefined,
+            money: '',
         }
     },
 
@@ -27,6 +32,60 @@ export default {
             } else {
                 return
             }
+        },
+
+        async createTransaction() {
+            try {
+                this.createMessage = ''
+                this.loadingCreate = true
+
+                if(this.createValid) {
+                    this.createMessage = 'Произошла ошибка в заполнении'
+                    return this.loadingCreate = false
+                }
+
+                let response = await axios.post('/transaction/create', {
+                    money: this.money,
+                    fromCard: this.payCardFrom,
+                    toCard: this.payCardTo
+                })
+                
+                let cookieRoute = response.data.oplata
+
+                this.money = ''
+                this.payCardFrom = ''
+                this.payCardTo = ''
+
+                this.loadingCreate = false
+                this.createMessage = 'Перенаправляем вас на страницу подтверждения'
+                await new Promise(prom => setTimeout(prom, 1200)).then(() => {
+                    this.$router.push({
+                        name: 'oplata',
+                        params: {
+                            key: cookieRoute
+                        }
+                    })
+                })
+
+            } catch (error) {
+                if(error.response) {
+                    this.createMessage = error.response.data
+                    console.log('Ошибка при отправке запроса на сервер:(', error)
+                    return this.loadingCreate = false
+                } else {
+                    return this.loadingCreate = false
+                }
+            }
+        }
+    },
+
+    computed: {
+        ...mapState({
+            user: state => state.mainModule.user
+        }),
+
+        createValid() {
+            return this.payCardFrom === '' || this.payCardTo === '' || this.money === ''
         }
     }
 }
@@ -35,7 +94,7 @@ export default {
 
 <template>
     <div class="container">
-        <form class="payments">
+        <form class="payments" @submit.prevent="createTransaction">
             <h2><b>Платежи</b></h2>
             <div class="choice">
                 <label class="with-card" for="checkCard" @click="selectPaymentWay('card')">
@@ -49,7 +108,7 @@ export default {
                 </label>
                 <label class="with-tel" for="checkTel" @click="selectPaymentWay('tel')">
                     <div class="top">
-                        <img src="@/assets/images/tel.png" alt="">
+                        <img src="@/assets/images/tel.png" alt="" style="width: 23.5px;">
                         <div class="form-check">
                             <input class="form-check-input" name="choice" type="radio" id="checkTel" :checked="paymentWayTel">
                         </div>
@@ -61,37 +120,38 @@ export default {
             <div class="payment-to" v-if="paymentWayCard">
                 <div class="from">
                     <h3><b>С карты</b></h3>
-                    <input v-model="payCardFrom" type="tel" required pattern="[0-9]{16}" class="form-control" maxlength="16" placeholder="Номер вашей карты">
+                    <input v-model.trim="payCardFrom" type="number" required pattern="[0-9]{16}" class="form-control" maxlength="16" placeholder="Номер вашей карты">
                 </div>
                 <i class="fa fa-chevron-right"></i>
                 <div class="to">
                     <h3><b>На карту</b></h3>
-                    <input v-model="payCardTo" type="tel" required pattern="[0-9]{16}" class="form-control" maxlength="16" placeholder="Номер карты получателя">
+                    <input v-model.trim="payCardTo" type="number" required pattern="[0-9]{16}" class="form-control" maxlength="16" placeholder="Номер карты получателя">
                 </div>
             </div>
             <div class="payment-to" v-if="paymentWayTel">
                 <div class="from">
                     <h3><b>С карты (по телефону)</b></h3>
-                    <input v-model="payTelFrom" type="tel" required pattern="[0-9]{16}" class="form-control" maxlength="16" placeholder="Номер привязанного телефона">
+                    <input v-model.trim.number="payTelFrom" type="tel" required pattern="[0-9]{16}" class="form-control" maxlength="16" placeholder="Номер привязанного телефона">
                 </div>
                 <i class="fa fa-chevron-right"></i>
                 <div class="to">
                     <h3><b>На карту (по телефону)</b></h3>
-                    <input v-model="payTelTo" type="tel" required pattern="[0-9]{16}" class="form-control" maxlength="16" placeholder="Номер телефона получателя">
+                    <input v-model.trim="payTelTo" type="tel" required pattern="[0-9]{16}" class="form-control" maxlength="16" placeholder="Номер телефона получателя">
                 </div>
             </div>
-            <my-input-card min="5" max="10000" placeholder="Сумма, руб." type="number"></my-input-card>
+            <my-input-card min="5" max="10000" v-model.trim.number="money" placeholder="Сумма, руб." type="number"></my-input-card>
             <hr>
             <div class="submit">
                 <p class="text-secondary">Нажимая на кнопку «Перевести», вы соглашаетесь<br> с условиями публичной оферты</p>
-                <my-button-reg>Перевести</my-button-reg>
+                <my-button-reg type="submit" :disabled="loadingCreate">Перевести</my-button-reg>
             </div>
+            <transition name="alert"><div v-if="this.createMessage !== ''" class="alert text-center" data-67cdadw :class="this.createMessage === 'Перенаправляем вас на страницу подтверждения' ? 'alert-success' : 'alert-danger'">{{ createMessage }}</div></transition>
         </form>
         <div class="transactions-history">
             <div class="nav-info">
                 <h2 class="mb-3"><b>Операции</b><h5 class="text-secondary">(всего 3 операции по данной карте)</h5></h2>
                 <div class="d-block"><div class="d-flex gap-3 align-items-center"><h4 style="margin: 0;">По карте:</h4><img src="@/assets/images/cardWallet.png" width="50" alt=""></div>
-                    <my-select class="mt-1"></my-select>
+                    <my-select class="mt-1" v-model.trim="selectedCard" @update:modelValue="getSelectedCard" :cards="user.cards"></my-select>
                 </div>
             </div>
             <div class="blocks">
@@ -130,5 +190,6 @@ export default {
 <style scoped lang="scss">
     @import '@/assets/sass/transaction.scss';
     @import '@/assets/sass/blackmode.scss';
+    @import '@/assets/sass/alertElem.scss';
 
 </style>

@@ -2,10 +2,10 @@
     <teleport to="#app">
         <div class="fill-info" v-if="show" @click="hideMenu">
             <div class="block" @click.stop>
-                <h2><b>Сначала введите данные</b></h2>
+                <h2><b>Перед созданием карт введите ваши данные</b></h2>
                 <form class="form-fill" @submit.prevent="fillData">
-                    <my-input-card v-model="surname" v-focus type="text" placeholder="Введите фамилию"></my-input-card>
-                    <my-input-card v-model="patronymic" type="text" placeholder="Введите отчество"></my-input-card>
+                    <my-input-card v-model.trim="surname" v-focus type="text" placeholder="Введите фамилию"></my-input-card>
+                    <my-input-card v-model.trim="patronymic" type="text" placeholder="Введите отчество"></my-input-card>
                     <my-button-reg>Сохранить</my-button-reg>
                 </form>
                 <transition name="alert"><div v-if="this.fillMessage !== ''" class="alert text-center" data-67cdadw :class="this.fillMessage === 'Данные заполнены' ? 'alert-success' : 'alert-danger'">{{ fillMessage }}</div></transition>

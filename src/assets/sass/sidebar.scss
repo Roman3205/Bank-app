@@ -14,7 +14,7 @@
 
 .container {
     padding: 25px 0px;
-    @include flex-mix(column, space-between, center, 45px);
+    @include flex-mix(column, space-between, center, 35px);
 
     p {
         font-size: 0.7rem!important;

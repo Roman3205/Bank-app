@@ -31,6 +31,10 @@ export default {
 
     Auth() {
       return this.$route.name === 'login' || this.$route.name === 'register' || this.$route.name === 'restore'
+    },
+
+    Oplata() {
+      return this.$route.name === 'oplata'
     }
   },
   
@@ -59,7 +63,7 @@ export default {
 </script>
 
 <template>
-  <div class="app" v-if="!NotFound && !Auth">
+  <div class="app" v-if="!NotFound && !Auth && !Oplata">
     <div class="nav-sidebar">
       <nav-side-bar></nav-side-bar>
     </div>
@@ -71,6 +75,7 @@ export default {
     <!-- </teleport> -->
   </div>
   <router-view v-else-if="NotFound"></router-view>
+  <router-view v-else-if="Oplata"></router-view>
   <div class="auth-menu" v-else-if="Auth">
       <router-view></router-view>
   </div>
@@ -102,13 +107,17 @@ export default {
     background-color: lightgray;
   }
 
-  .main-content::-webkit-scrollbar-thumb {
+  :global(.container) {
+    min-width: 100%!important;
+  }
+
+  :global(.container::-webkit-scrollbar-thumb) {
       width: 12px;
       border-radius: 20px;
       background: rgb(13,110,253);
   }
 
-  .main-content::-webkit-scrollbar {
+  :global(.container::-webkit-scrollbar) {
       background: rgb(177, 208, 255);
       border-radius: 20px;
   }

@@ -1,8 +1,8 @@
 import axios from 'axios'
-const host = import.meta.env.VITE_BACKEND_HOST
-const port = import.meta.env.VITE_BACKEND_PORT
+// const host = import.meta.env.VITE_BACKEND_HOST
+// const port = import.meta.env.VITE_BACKEND_PORT
 
-axios.defaults.baseURL = 'http://' + host + ':' + port
+axios.defaults.baseURL = 'http://localhost:3777'
 axios.defaults.withCredentials = true
 
 import dayjs from 'dayjs'
@@ -18,7 +18,7 @@ import router from '@/router/router.js'
 import store from '@/store/store.js'
 import UI from '@/components/UI/ui.js'
 import directives from '@/directives/directives'
-import VueCookies from "vue-cookies"
+import VueCookies from 'vue-cookies'
 
 const app = createApp(App)
 

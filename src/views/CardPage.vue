@@ -16,20 +16,22 @@
                 <hr>
                 <div class="submit">
                     <p class="text-secondary">Заполняя форму, я принимаю <a href="https://www.consultant.ru/document/cons_doc_LAW_34683/693c16ad10f7f494a958cb007737bd678c221d4c/">условия <br> передачи информации</a></p>
-                    <span class="text-danger" v-if="checkData">Сначала введите свою фамилию и отчество в меню</span>
-                    <my-button-reg :disabled="checkData">Оформить</my-button-reg>
+                    <span class="text-danger" v-if="checkData">Обновите страницу и введите свою фамилию и отчество в меню</span>
+                    <my-button-reg :disabled="checkData || loadingCreate">Оформить</my-button-reg>
                 </div>
+                <transition name="alert"><div v-if="this.deleteMessage !== ''" class="alert text-center" data-67cdadw :class="this.deleteMessage === 'Карта успешно создана' ? 'alert-success' : 'alert-danger'">{{ deleteMessage }}</div></transition>
                 <transition name="alert"><div v-if="this.createMessage !== ''" class="alert text-center" data-67cdadw :class="this.createMessage === 'Карта успешно создана' ? 'alert-success' : 'alert-danger'">{{ createMessage }}</div></transition>
             </form>
-            <div class="cards-all">
+            <div class="cards-all" v-if="user.cards">
                 <h2><b>Ваши карты</b></h2>
-                <transition-group name="cards-group" v-if="user.cards">
+                <span v-if="user.cards.length == 0">Список ваших карт пуст</span>
+                <transition-group name="cards-group" v-else-if="user.cards.length != 0">
                     <div class="card" v-for="(card, index) in user.cards" :key="index">
                         <div class="d-flex align-items-center gap-5">
                             <img src="@/assets/images/cardWallet.png" width="50" alt="">
-                            <p>{{ card.uniqueCardNumber }}</p>
+                            <p>{{ getNumberCorrect(card.uniqueCardNumber) }}</p>
                         </div>
-                        <my-button-reg class="btn-danger text-white">Закрыть карту</my-button-reg>
+                        <my-button-reg :disabled="loadingDelete" class="btn-danger text-white" @click.prevent="deleteCard(card._id)">Закрыть карту</my-button-reg>
                     </div>
                 </transition-group>
             </div>
@@ -41,8 +43,12 @@
     import FillForm from '@/components/FillForm.vue'
     import axios from 'axios'
     import { mapState } from 'vuex'
+    import { mapActions } from 'vuex'
+    import cardMixin from '@/mixins/mixin.js'
 
     export default {
+        mixins: [cardMixin],
+
         components: {
             FillForm
         },
@@ -52,7 +58,10 @@
                 formVisible: true,
                 tel: '',
                 date: '',
-                createMessage: ''
+                createMessage: '',
+                deleteMessage: '',
+                loadingCreate: undefined,
+                loadingDelete: undefined
             }
         },
 
@@ -67,16 +76,56 @@
         },
 
         methods: {
+            ...mapActions({
+                loadUser: 'mainModule/loadUser'
+            }),
+
+            async deleteCard(id) {
+                try {
+                    this.loadingDelete = true
+                    this.deleteMessage = ''
+
+                    await axios.post('/card/delete', {
+                        cardId: id
+                    })
+                    this.loadingDelete = false
+
+                    this.deleteMessage = 'Карта закрыта'
+                    this.loadUser()
+
+                    await new Promise(prom => setTimeout(prom, 1300)).then(() => {
+                        this.deleteMessage = ''
+                    })
+
+                } catch (error) {
+                    if(error.response) {
+                        this.deleteMessage = error.response.data
+                        console.log('Ошибка при отправке запроса на сервер:(')
+                        return this.loadingDelete = false
+                    } else {
+                        return
+                    }
+                }
+            },
+
             async createCard() {
                 try {
+                    this.loadingCreate = true
                     this.createMessage = ''
 
                     let compareDate = Math.floor(((new Date().getTime() - new Date(this.date)) / (24 * 3600 * 365.25 * 1000)).toFixed(1))
 
                     if(this.date === '' || this.tel === '') {
-                        return this.createMessage = 'Произошла ошибка в заполнении'
+                         this.createMessage = 'Произошла ошибка в заполнении'
+                         return this.loadingCreate = false
+
                     } else if(compareDate < 14) {
-                        return this.createMessage = 'Вам недостаточно лет для оформления карты'
+                         this.createMessage = 'Вам недостаточно лет для оформления карты'
+                         return this.loadingCreate = false
+
+                    } else if(compareDate > 100) {
+                         this.createMessage = 'Введите корректную дату рождения'
+                         return this.loadingCreate = false
                     }
 
                     await axios.post('/card/create', {
@@ -90,15 +139,18 @@
                     this.tel = ''
                     this.date = ''
 
+                    this.loadingCreate = false
+                    this.loadUser()
                     this.createMessage = 'Карта успешно создана'
 
-                    await new Promise(prom => setTimeout(prom, 900)).then(() => {
+                    await new Promise(prom => setTimeout(prom, 1300)).then(() => {
                         this.createMessage = ''
                     })
                 } catch (error) {
                     if(error.response) {
                         this.createMessage = error.response.data
                         console.log('Ошибка при отправке запроса на сервер:(', error)
+                        return this.loadingCreate = false
                     } else {
                         return
                     }

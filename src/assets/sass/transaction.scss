@@ -1,8 +1,9 @@
 @import './dashboard.scss';
 
 .container {
-    @include flex-mix(column, none, none, 40px);
+    @include flex-mix(column, start, none, 40px);
     padding-bottom: 70px;
+    height: 100vh;
 }
 
 .transactions-history {

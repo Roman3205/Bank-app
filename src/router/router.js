@@ -55,6 +55,11 @@ let router = createRouter({
             path: '/:pathMatch(.*)',
             name: 'notfound',
             component: NotFoundPage
+        },
+        {
+            path: '/oplata/:key',
+            name: 'oplata',
+            component: () => import('@/views/OplataPage.vue')
         }
     ]
 })

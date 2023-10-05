@@ -5,8 +5,22 @@ let path = require('path')
 let bcrypt = require('bcrypt')
 let jwt = require('jsonwebtoken')
 let cookieParser = require('cookie-parser')
+let openAI = require("openai")
+let dayjs = require('dayjs')
+let nodemailer = require('nodemailer')
 
 dotenv.config({path: path.resolve(__dirname, '../../.env')})
+
+let transporter = nodemailer.createTransport({
+    host: 'smtp.yandex.ru',
+    port: 465,
+    secure: true,
+    // service: 'gmail',
+    auth: {
+        user: process.env.YANDEX_MAIL,
+        pass: process.env.YANDEX_PASSWORD
+    }
+})
 
 let backPort = process.env.VITE_BACKEND_PORT
 let backHost = process.env.VITE_BACKEND_HOST
@@ -19,6 +33,9 @@ app.listen(backPort, () => {
 
 let cors = require('cors')
 
+let openai = new openAI({
+    apiKey: process.env.OPENAI_KEY
+})
 app
     .use(express.json())
     .use(cookieParser())
@@ -88,11 +105,7 @@ let cardMessage = new mongoose.Schema({
         min: 0
     },
     uniqueCardNumber: Number,
-    transactionsTo: [{
-        type: mongoose.ObjectId,
-        ref: 'transaction'
-    }],
-    transactionsFrom: [{
+    transactions: [{
         type: mongoose.ObjectId,
         ref: 'transaction'
     }],
@@ -115,10 +128,14 @@ let transactionSchema = new mongoose.Schema({
         type: mongoose.ObjectId,
         ref: 'user'
     },
+    senderCard: Number,
     reciever: {
         type: mongoose.ObjectId,
         ref: 'user'
     },
+    recieverCard: Number,
+    pathNum: String,
+    codeNum: String
 }, {
     timestamps: true
 })
@@ -136,15 +153,16 @@ let Message = mongoose.model('message', messageSchema)
 
 let VerifyUser = (req, res, next) => {
     let cookToken = req.headers.cookie
+
+    if(!cookToken) {
+        return res.status(401).send('Вы не авторизованы')
+    }
+
     let newToken = cookToken.split(';')
     let index = newToken.findIndex(elem => elem.includes('user-cookie='))
     let token = newToken[index]
 
-    if(!token) {
-        return res.status(401).send('Вы не авторизованы')
-    }
-
-    jwt.verify(token.replace(`${process.env.COOKIE_USER}=`, ''), process.env.TOKEN_USER, (error, decoded) => {
+    jwt.verify(token.trim().replace(`${process.env.COOKIE_USER}=`, ''), process.env.TOKEN_USER, (error, decoded) => {
         if(error) {
             return res.status(401).send('Вы не авторизованы')
         }
@@ -169,6 +187,24 @@ let createCardNumber = async () => {
 
         if(!existNumber) {
             return number
+        }
+    }
+}
+
+let createNumber = async () => {
+    while(true) {
+        let result = ''
+        let characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
+
+        for(i = 0; i < 50; i++) {
+            let randomNumber = Math.floor(Math.random() * characters.length)
+            result += characters.charAt(randomNumber)
+        }
+
+        let existNumber = await Transaction.findOne({pathNum: result})
+
+        if(!existNumber) {
+            return result
         }
     }
 }
@@ -250,7 +286,15 @@ app.post('/login', async (req,res) => {
 })
 
 app.get('/user/main', VerifyUser, async (req,res) => {
-    let user = await User.findOne({_id: req.userJWT}).populate('cards')
+    let user = await User.findOne({_id: req.userJWT}).select('_id firstName lastName patronymic mail cards depositsAll expensesAll savingsAll messages carrierBirth').populate({
+        path: 'cards',
+        options: {
+            sort: {
+                createdAt: -1
+            }
+        },
+        select: '_id balance holdersName holdersSurname holdersPatronymic expirationDate uniqueCardNumber transactionsTo transactionsFrom'
+    })
 
     if(!user) {
         return res.status(401).send('Вы не авторизованы')
@@ -295,6 +339,10 @@ app.post('/card/create', VerifyUser, async (req,res) => {
         return res.status(409).send('Нельзя иметь больше 5-ти карт')
     }
 
+    if(date != user.carrierBirth) {
+        return res.status(409).send('Вы указали дату рождения, отличную от той, которую вы указывали при создании первой карты')
+    }
+
     let card = new Card({
         balance: 0,
         holdersName: name,
@@ -319,8 +367,246 @@ app.post('/card/create', VerifyUser, async (req,res) => {
     res.sendStatus(200)
 })
 
+app.get('/card/get', VerifyUser, async (req,res) => {
+    let {cardNumber} = req.query
+
+    let user = await User.findOne({_id: req.userJWT})
+
+    if(!user) {
+        return res.status(401).send('Вы не авторизованы')
+    }
+
+    let card = await Card.findOne({uniqueCardNumber: cardNumber}).select('_id balance holdersName holdersSurname holdersPatronymic expirationDate uniqueCardNumber transactionsTo transactionsFrom')
+
+    if(user.cards.indexOf(card._id) < 0) {
+        return res.status(409).send('Запрашиваемая карта вам не принадлежит')
+    }
+
+    if(!card) {
+        return res.status(409).send('Карта не найдена')
+    }
+
+    res.status(200).send(card)
+})
+
+app.post('/card/delete', VerifyUser, async (req,res) => {
+    let {cardId} = req.body
+
+    let user = await User.findOne({_id: req.userJWT})
+
+    if(!user) {
+        return res.status(401).send('Вы не авторизованы')
+    }
+
+    // let card = await Card.findOneAndDelete({_id: cardId})
+    let card = await Card.findOne({_id: cardId})
+
+    if(!card) {
+        return res.status(409).send('Карта не найдена')
+    } else if (card.balance > 0) {
+        return res.status(409).send('Баланс карты не равен нулю')
+    }
+
+    await card.deleteOne()
+
+    let index = user.cards.indexOf(card._id)
+
+    if(index != -1) {
+        user.cards.splice(index, 1)
+        await user.save()
+    } else {
+        return
+    }
+
+    res.sendStatus(200)
+})
+
+app.post('/transaction/create', VerifyUser, async (req,res) => {
+    let {money, fromCard, toCard} = req.body
+
+    let user = await User.findOne({_id: req.userJWT})
+
+    if(!user) {
+        return res.status(401).send('Вы не авторизованы')
+    }    
+
+    let cardFrom = await Card.findOne({uniqueCardNumber: fromCard})
+    let cardTo = await Card.findOne({uniqueCardNumber: toCard})
+
+    if(!cardFrom || !cardTo) {
+        return res.status(409).send('Карта получателя не найдена')
+    } else if(!user.cards.includes(cardFrom._id)) {
+        return res.status(409).send('Карта, с которой вы переводите деньги, вам не принадлежит')
+    } else if(String(cardFrom._id) === String(cardTo._id)) {
+        return res.status(409).send('Нельзя перевести деньги на свою же карту')
+    } else if(money > cardFrom.balance) {
+        return res.status(409).send('Недостаточно средств на балансе карты')
+    }
+
+    let number = Math.floor(Math.random() * (999999-111111) + 111111)
+
+    let mailOptions = {
+        from: process.env.YANDEX_MAIL,
+        to: `${user.mail}`,
+        subject: 'МикроБанк',
+        // text: `С вашего аккаунт будет совершена операция по переводу\n Если это сделали не вы - не переходите по ссылке \n ${number}`
+        html: `
+        <p>С вашего аккаунта будет совершена операция по переводу.</p>
+        <p>Если это сделали не вы, пожалуйста, проигнорируйте данное письмо.</p>
+        <span>Код подтверждения:</span> <strong><h3>${number}</h3></strong>
+        `
+    }
+
+    transporter.sendMail(mailOptions, (error, info) => {
+        if (error) {
+            return res.status(409).send('Произошла ошибка с отправкой кода подтверждения: ' + error);
+        }
+    })
+
+    let salt = await bcrypt.genSalt(10)
+    let codeNum = await bcrypt.hash(String(number), salt)
+    
+    let sender = await User.findOne({cards: {$elemMatch: {$eq: String(cardFrom._id)}}})
+    let reciever = await User.findOne({cards: {$elemMatch: {$eq: String(cardTo._id)}}})
+
+    if(!reciever || !sender) {
+        return res.status(409).send('Получатель не найден')
+    }
+
+    let path = await createNumber()
+
+    let transaction = new Transaction({
+        type: 'waiting-for-shifting',
+        money: money,
+        uniqueNumber: await createTransactionNumber(),
+        sender: sender._id,
+        senderCard: Number(cardFrom.uniqueCardNumber),
+        reciever: reciever._id,
+        recieverCard: Number(cardTo.uniqueCardNumber),
+        pathNum: path,
+        codeNum: codeNum
+    })
+
+    await transaction.save()
+
+    res
+        .status(200)
+        .send({oplata: path})
+})
+
+app.get('/oplata/get', VerifyUser, async(req,res) => {
+    let {path} = req.query
+
+    let user = await User.findOne({_id: req.userJWT})
+
+    if(!user) {
+        return res.status(401).send('Вы не авторизованы')
+    }
+
+    let transaction = await Transaction.findOne({pathNum: path}).select('type money createdAt recieverCard')
+
+    if(!transaction) {
+        return res.status(409).send('Транзакции не существует')
+    }
+
+    res.status(200).send(transaction)
+})
+
+app.post('/transaction/accept', VerifyUser, async(req,res) => {
+    let {code, path} = req.body
+
+    let user = await User.findOne({_id: req.userJWT})
+
+    if(!user) {
+        return res.status(401).send('Вы не авторизованы')
+    }
+
+    let transaction = await Transaction.findOne({pathNum: path})
+
+    if(!transaction) {
+        return res.status(409).send('Транзакции не существует')
+    }
+
+    let operationDate = dayjs(transaction.createdAt)
+    let now = dayjs()
+
+    let difference = now.diff(operationDate, 'seconds')
+    if(difference > 600) {
+        return res.status(409).send('Операция больше недействительна, так как время на ввод кода закончилось')
+    }
+
+    let check = await bcrypt.compare(code, transaction.codeNum)
+
+    if(!check) {
+        return res.status(409).send('Код подтверждения не подходит')
+    }
+
+    let senderCardNum = await Card.findOne({uniqueCardNumber: transaction.senderCard})
+    let recieverCardNum = await Card.findOne({uniqueCardNumber: transaction.recieverCard})
+
+    if(!recieverCardNum || !senderCardNum) {
+        return res.status(409).send('Получатель не найден')
+    }
+    
+    let sender = await User.findOne({cards: {$elemMatch: {$eq: String(senderCardNum._id)}}})
+    let reciever = await User.findOne({cards: {$elemMatch: {$eq: String(recieverCardNum._id)}}})
+
+    if(!reciever || !sender) {
+        return res.status(409).send('Получатель не найден')
+    }
+
+    senderCardNum.balance = Number(senderCardNum.balance) - Number(transaction.money)
+    senderCardNum.expenses = Number(senderCardNum.expenses) + Number(transaction.money)
+    recieverCardNum.balance = Number(recieverCardNum.balance) + Number(transaction.money)
+    senderCardNum.transactions.push(transaction._id)
+    recieverCardNum.transactions.push(transaction._id)
+
+    await senderCardNum.save()
+    await recieverCardNum.save()
+
+    sender.expensesAll = Number(sender.expensesAll) + Number(transaction.money)
+    reciever.depositsAll = Number(reciever.depositsAll) + Number(transaction.money)
+
+    await sender.save()
+    await reciever.save()
+
+    transaction.type = 'shifting'
+    transaction.pathNum = null
+    transaction.codeNum = null
+
+    await transaction.save()
+
+    res.sendStatus(200)
+})
+
+
+
+
+
+
+
+
+
+
+
+// app.post('/ask', VerifyUser, async(req,res) => {
+//     let {prompt} = req.body
+
+//     let response = await openai.chat.completions.create({
+//         "model": "gpt-3.5-turbo-0613",
+//         "message": [
+//             {"role": "assistant",
+//             "content": "\n\nThis is a test!"}
+//         ]
+//     })
+
+//     console.log(response);
+
+//     res.send(response.choices[0].message)
+// })
+
 app.post('/logout', async (req,res) => {
     res.clearCookie(process.env.COOKIE_USER)
-
+    
     res.sendStatus(200)
 })

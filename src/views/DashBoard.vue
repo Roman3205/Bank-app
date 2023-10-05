@@ -1,7 +1,12 @@
 <script>
 import { mapState } from 'vuex'
+import axios from 'axios'
+import dayjs from 'dayjs'
+import cardMixin from '@/mixins/mixin.js'
 
 export default {
+    mixins: [cardMixin],
+
     data() {
         return {
             month: [
@@ -22,14 +27,48 @@ export default {
                 }
             ],
 
-            selectedCard: ''
+            selectedCard: '',
+            card: {}
+        }
+    },
+
+    methods: {
+        getDateEx(date) {
+            let day = dayjs(date)
+            return day.format('MM/YY')
+        },
+        
+        async getSelectedCard() {
+            try {
+                if(this.selectedCard === '') {
+                    return
+                }
+
+                let response = await axios.get('/card/get', {
+                    params: {
+                        cardNumber: this.selectedCard
+                    }
+                })
+
+                this.card = {...response.data}
+                } catch (error) {
+                    if(error.response) {
+                        console.log('Ошибка при отправке запроса на сервер:(', error.response)
+                    } else {
+                        return
+                    }
+                }
         }
     },
 
     computed: {
         ...mapState({
             user: state => state.mainModule.user
-        })
+        }),
+
+        checkObj() {
+            return Object.keys(this.card).length != 0
+        }
     }
  }
 
@@ -46,7 +85,7 @@ export default {
                             <p class="rub-m"><b>{{ user.depositsAll }}</b><b><i class="fa fa-rub"></i></b></p>
                         </div>
                         <div class="spent me-2">
-                            <p>Затраты</p>
+                            <p>Траты</p>
                             <p class="rub-m"><b>{{ user.expensesAll }}</b><b><i class="fa fa-rub"></i></b></p>
                         </div>
                         <div class="saving">
@@ -57,15 +96,16 @@ export default {
                 </div>
                 <div class="wallet-block" v-if="user.cards">
                     <h2><b>Мой кошелек</b></h2>
-                    <my-select v-model="selectedCard" :cards="user.cards"></my-select>
-                    <div class="card" v-if="user.cards.length != 0">
-                        <p>Роман Романов</p>
-                        <p>06/30</p>
-                        <p><b>2131 3103 8130 1210</b></p>
+                    <my-select v-model.trim="selectedCard" @update:modelValue="getSelectedCard" :cards="user.cards"></my-select>
+                    <div class="card" v-if="checkObj">
+                        <p>{{ card.holdersName }} {{ card.holdersSurname }}</p>
+                        <p>{{ getDateEx(card.expirationDate) }}</p>
+                        <p><b>{{ getNumberCorrect(card.uniqueCardNumber) }}</b></p>
                     </div>
                     <h5><b>Счет карты</b></h5>
                     <span v-if="user.cards.length == 0">У вас нет ни одной карты</span>
-                    <div v-else class="money-wallet"><div class="rub"><i class="fa fa-rub"></i></div><p class="rub-m"><b>2 102,03</b> <i class="fa fa-rub"></i></p></div>
+                    <span v-else-if="user.cards.length != 0 && !checkObj">Карта не выбрана</span>
+                    <div v-if="checkObj" class="money-wallet align-items-center"><div class="rub"><i class="fa fa-rub"></i></div><p class="rub-m" style="font-size: 22px; margin: 0;"><b>{{ card.balance }}</b> <i class="fa fa-rub"></i></p></div>
             </div>
         </div>
         <div class="right">
@@ -83,7 +123,7 @@ export default {
                             <p>0</p>
                         </div>
                         <div class="time">
-                            <div class="month" v-for="(item) in month">
+                            <div class="month" v-for="(item, index) in month" :key="index">
                                 <div class="stat">
                                     <div class="top-up" :style="{height: item.topUp + '%'}"></div>
                                     <div class="withdrawals" :style="{height: item.withdraw + '%'}"></div>
@@ -173,5 +213,9 @@ export default {
 <style scoped lang="scss">
     @import '@/assets/sass/dashboard.scss';
     @import '@/assets/sass/blackmode.scss';
+    // :global(*) {
+    //     background-color: black;
+    //     color: #fff;
+    // }
 
 </style>

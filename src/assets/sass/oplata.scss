@@ -1,0 +1,34 @@
+.oplata-block {
+    margin-top: 30px;
+    display: flex;
+    border-radius: 10px;
+    border: 2px solid lightgray;
+    padding: 30px 40px;
+    align-items: center;
+    flex-direction: column;
+    max-width: 550px;
+    gap: 20px;
+}
+
+.container {
+    display: flex;
+    justify-content: center;
+}
+
+.type, .sum, .date, .card-number {
+    display: flex;
+    justify-content: space-around;
+    width: 100%;
+}
+
+p[data-p="ptext"] {
+    
+    text-align: left;
+    word-wrap: break-word;
+    word-spacing: 5px;
+    line-height: 25px;
+}
+
+button[data-button="button"] {
+    width: 100%;
+}

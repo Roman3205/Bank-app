@@ -9,7 +9,8 @@ export default {
             mail: '',
             password: '',
             passwordConfirm: '',
-            regMessage: ''
+            regMessage: '',
+            loadingSignUp: undefined
         }
     },
 
@@ -20,12 +21,15 @@ export default {
     methods: {
         async registerAction() {
             try {
+                this.loadingSignUp = true
                 this.regMessage = ''
 
                 if(this.regValid) {
-                    return this.regMessage = 'Произошла ошибка в заполнении'
+                    this.regMessage = 'Произошла ошибка в заполнении'
+                    return this.loadingSignUp = false
                 } else if(this.password !== this.passwordConfirm) {
-                    return this.regMessage = 'Пароли не совпадают'
+                    this.regMessage = 'Пароли не совпадают'
+                    return this.loadingSignUp = false
                 }
 
                 await axios.post('/logout')
@@ -40,7 +44,7 @@ export default {
                 this.name = ''
                 this.mail = ''
                 this.password = ''
-
+                this.loadingSignUp = false
                 this.regMessage = 'Регистрация прошла успешно'
 
                 await new Promise(prom => setTimeout(prom, 900)).then(() => {
@@ -51,6 +55,7 @@ export default {
                 if(error.response) {
                     this.loginMessage = error.response.data
                     console.log('Ошибка при отправке запроса на сервер:(', error)
+                    return this.loadingSignUp = false
                 } else {
                     return
                 }
@@ -83,7 +88,7 @@ export default {
                 <my-input v-model="mail" type="email" placeholder="Почта"></my-input>
                 <my-input v-model="password" type="password" placeholder="Пароль"></my-input>
                 <my-input v-model="passwordConfirm" type="password" placeholder="Подтвердите пароль"></my-input>
-                <my-button-reg>Зарегистрироваться</my-button-reg>
+                <my-button-reg :disabled="loadingSignUp">Зарегистрироваться</my-button-reg>
             </form>
             <transition name="alert"><div v-if="this.regMessage !== ''" data-67cdadw class="alert text-center" :class="this.regMessage === 'Регистрация прошла успешно' ? 'alert-success' : 'alert-danger'">{{ regMessage }}</div></transition>
         </div>
