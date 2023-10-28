@@ -24,4 +24,5 @@ let mainModule = {
 
     namespaced: true
 }
+
 export default mainModule

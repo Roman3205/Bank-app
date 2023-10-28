@@ -4,10 +4,7 @@
 
 <script>
     export default {
-        name: 'my-button-reg',
-        props: {
-
-        }
+        name: 'my-button-reg'
     }
 </script>
 
@@ -26,7 +23,7 @@
 
         &:hover {
             opacity: 0.75;
-            color: rgb(106, 167, 253);
+            color: #fff;
             border: 3px solid rgb(106, 167, 253);
         }
     }

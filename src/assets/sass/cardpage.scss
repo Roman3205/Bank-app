@@ -17,7 +17,6 @@
 }
 
 .create-card, .cards-all {
-    background-color: #fff;
     border-radius: 10px;
     padding: 10px 20px 40px 20px;
     @include flex-mix(column, none, none, 0px);

@@ -99,6 +99,11 @@ import {mapActions} from 'vuex'
             },
 
             async acceptOplata() {
+                let promReturn = async () => {
+                    await new Promise(prom => setTimeout(prom, 1400)).then(() => {
+                        this.$router.push('/transactions')
+                    })
+                }
                 try {
                     if(this.code === '') {
                         return this.acceptMessage = 'Заполните поле ввода'
@@ -114,19 +119,24 @@ import {mapActions} from 'vuex'
                     this.acceptMessage = 'Операция подтверждена'
                     this.loadingAccept = false
 
-                    await new Promise(prom => setTimeout(prom, 900)).then(() => {
-                        this.$router.push('/transactions')
-                    })
+                    await promReturn()
 
                     this.loadUser()
                 } catch (error) {
-                    if(error.response) {
+                    if(error.response && error.response.status === 409 && error.response.data !== 'Транзакции не существует') {
                         console.log('Ошибка при отправке запроса на сервер:(\n', error.response.data)
-                        this.loadingAccept = false
                         this.acceptMessage= 'Неверный код подтверждения'
+                    } else if(error.response.status === 404) {
+                        this.acceptMessage = error.response.data
+                        await promReturn()
+                    } else if(error.response.data === 'Транзакции не существует') {
+                        this.acceptMessage = error.response.data
+                        await promReturn()
                     } else {
                         return
                     }
+                } finally {
+                    this.loadingAccept = false
                 }
             }
         }

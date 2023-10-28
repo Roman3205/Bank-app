@@ -1,9 +1,28 @@
 <script>
-import { mapState } from 'vuex'
+import { mapState, mapActions, mapMutations } from 'vuex'
 import axios from 'axios'
 
 export default {
     methods: {
+        ...mapActions({
+            changeTheme: 'changeTheme',
+            changeThemeDefault: 'changeThemeDefault'
+        }),
+
+        ...mapMutations({
+            setUser: 'mainModule/setUser'
+        }),
+
+        changeColorTheme(evt) {
+            if(evt.target.checked == true) {
+                this.changeTheme()
+            } else if(evt.target.checked == false) {
+                this.changeThemeDefault()
+            } else {
+                return
+            }
+        },
+
         routerAction(evt, goTo) {
             evt.preventDefault()
             this.$router.push({
@@ -17,6 +36,7 @@ export default {
 
                 await new Promise(prom => setTimeout(prom, 900)).then(() => {
                     this.$cookies.remove('cookie-auth', '/', '')
+                    this.setUser({})
                     this.$router.push('/login')
                 })
             } catch (error) {
@@ -27,6 +47,10 @@ export default {
 
     computed: {
         ...mapState({
+            color: state => state.color,
+            backgroundBlock: state => state.backgroundBlock,
+            background: state => state.background,
+            sideBarColor: state => state.sideBarColor,
             user: state => state.mainModule.user
         })
     }
@@ -58,7 +82,7 @@ export default {
             <label for="switch">
                 Темный режим
                 <div class="form-check form-switch m-0 mt-1">
-                    <input @input="test" class="form-check-input" type="checkbox" role="switch" id="switch" />
+                    <input @input="changeColorTheme($event)" class="form-check-input" type="checkbox" role="switch" id="switch" />
                 </div>
             </label>
         </my-button-bar>
@@ -88,5 +112,20 @@ export default {
 <style scoped lang="scss">
     @import '@/assets/sass/sidebar.scss';
     @import '@/assets/sass/blackmode.scss';
+    * {
+        color: v-bind(sideBarColor);
+    }
+
+    .user .data h2 b, .user .data p {
+        color: v-bind(color);
+    }
+
+    .dark-mode label {
+        transition: 0.55s;
+
+        &:hover {
+            color: #fff;
+        }
+    }
 
 </style>

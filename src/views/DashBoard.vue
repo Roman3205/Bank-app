@@ -9,24 +9,18 @@ export default {
 
     data() {
         return {
+            moneyStatValues: [9000, 7500, 6000, 4500, 3000, 1500, 0],
             month: [
                 {
-                    name: 'Август',
-                    topUp: 53,
-                    withdraw: 23
+                    name: dayjs().month(dayjs().month()).format('MMMM'),
                 },
                 {
-                    name: 'Сентябрь',
-                    topUp: 25,
-                    withdraw: 86
+                    name: dayjs().month(dayjs().month() - 1).format('MMMM'),
                 },
                 {
-                    name: 'Октябрь',
-                    topUp: 35,
-                    withdraw: 50
-                }
+                    name: dayjs().month(dayjs().month() - 2).format('MMMM'),
+                },
             ],
-
             selectedCard: '',
             card: {}
         }
@@ -37,6 +31,11 @@ export default {
             let day = dayjs(date)
             return day.format('MM/YY')
         },
+
+        getTime(date) {
+            let day = dayjs(date)
+            return day.format('D MMMM H:mm')
+        },
         
         async getSelectedCard() {
             try {
@@ -46,24 +45,89 @@ export default {
 
                 let response = await axios.get('/card/get', {
                     params: {
-                        cardNumber: this.selectedCard
+                        cardNumber: this.selectedCard,
+                        compressed: true
                     }
                 })
 
                 this.card = {...response.data}
-                } catch (error) {
-                    if(error.response) {
-                        console.log('Ошибка при отправке запроса на сервер:(', error.response)
-                    } else {
-                        return
-                    }
+            } catch (error) {
+                if(error.response) {
+                    console.log('Ошибка при отправке запроса на сервер:(', error.response)
+                } else {
+                    return
                 }
+            }
+        },
+
+        getStatistics(month, status) {
+            if (this.checkObj) {
+                let dateNow = dayjs().month()
+                let filteredDates = this.card.transactions.filter(elem => {
+                    let date = dayjs(elem.createdAt).month()
+                    return date == Number(dateNow) - month
+                })
+
+                let money
+                if (status === 'spent') {
+                    let spentTransactions = filteredDates.filter(elem => {
+                        return this.card.uniqueCardNumber == elem.senderCard
+                    })
+
+                    let moneySpent = spentTransactions.reduce((a, i) => a + i.money, 0)
+
+                    money = moneySpent
+                } else if (status === 'recieve') {
+                    let recieveTransactions = filteredDates.filter(elem => {
+                        return this.card.uniqueCardNumber != elem.senderCard
+                    })
+
+                    let moneyRecieve = recieveTransactions.reduce((a, i) => a + i.money, 0)
+
+                    money = moneyRecieve
+                }
+
+                return money
+            }
+        },
+
+        getStatPercent(max, current) {
+            let singlePer = Number(max) / 100
+            let result = Number(current) / singlePer
+            if (result == 0) {
+                result = 1
+            }
+            return result
+        },
+
+        getSpentStat(type) {
+            if (this.checkObj) {
+                let dateNow = dayjs().month()
+                let transactionDates = this.card.transactions.filter(elem => {
+                    let date = dayjs(elem.createdAt).month()
+                    return date == Number(dateNow) - 0
+                })
+
+                let spentTransactions = transactionDates.filter(elem => {
+                    return this.card.uniqueCardNumber == elem.senderCard
+                })
+
+                let typedSpentTransactions = spentTransactions.filter(elem => elem.type == type)
+
+                console.log(spentTransactions.length, typedSpentTransactions.length);
+                let percentOfTransactions = spentTransactions.length / 100
+                
+                return typedSpentTransactions.length /  percentOfTransactions
+            }
         }
     },
 
     computed: {
         ...mapState({
-            user: state => state.mainModule.user
+            user: state => state.mainModule.user,
+            color: state => state.color,
+            backgroundBlock: state => state.backgroundBlock,
+            background: state => state.background
         }),
 
         checkObj() {
@@ -106,7 +170,7 @@ export default {
                     <span v-if="user.cards.length == 0">У вас нет ни одной карты</span>
                     <span v-else-if="user.cards.length != 0 && !checkObj">Карта не выбрана</span>
                     <div v-if="checkObj" class="money-wallet align-items-center"><div class="rub"><i class="fa fa-rub"></i></div><p class="rub-m" style="font-size: 22px; margin: 0;"><b>{{ card.balance }}</b> <i class="fa fa-rub"></i></p></div>
-            </div>
+                </div>
         </div>
         <div class="right">
             <div class="block-top">
@@ -114,19 +178,13 @@ export default {
                     <h2><b>Статистика</b></h2>
                     <div class="blocks">
                         <div class="count">
-                            <p>8000</p>
-                            <p>5000</p>
-                            <p>3000</p>
-                            <p>1000</p>
-                            <p>500</p>
-                            <p>300</p>
-                            <p>0</p>
+                            <p v-for="value, index in moneyStatValues" :key="index">{{ value }}</p>
                         </div>
                         <div class="time">
                             <div class="month" v-for="(item, index) in month" :key="index">
                                 <div class="stat">
-                                    <div class="top-up" :style="{height: item.topUp + '%'}"></div>
-                                    <div class="withdrawals" :style="{height: item.withdraw + '%'}"></div>
+                                    <div class="top-up" :style="this.checkObj && this.card.transactions.length > 0 ? {height: this.getStatPercent(this.moneyStatValues[0], this.getStatistics(index, 'recieve')) + '%'} : {height: '1%'}"></div>
+                                    <div class="withdrawals" :style="this.checkObj && this.card.transactions.length > 0 ? {height: this.getStatPercent(this.moneyStatValues[0], this.getStatistics(index, 'spent')) + '%'} : {height: '1%'}"></div>
                                 </div>
                                 <p>{{ item.name }}</p>
                             </div>
@@ -137,22 +195,22 @@ export default {
                     <h2><b>Диаграмма расходов</b><br><span class="text-secondary">в этом месяце</span></h2>
                     <div class="blocks">
                         <div class="percent">
-                            <svg viewBox="0 0 36 36" class="circular-chart">
-                                <path class="circle" stroke-dasharray="100, 100" d="M18 2.0845
-                a 15.9155 15.9155 0 0 1 0 31.831
-                a 15.9155 15.9155 0 0 1 0 -31.831" />
-                                <path class="circle" stroke-dasharray="85, 100" d="M18 2.0845
-                a 15.9155 15.9155 0 0 1 0 31.831
-                a 15.9155 15.9155 0 0 1 0 -31.831" />
-                                <path class="circle" stroke-dasharray="60, 100" d="M18 2.0845
-                a 15.9155 15.9155 0 0 1 0 31.831
-                a 15.9155 15.9155 0 0 1 0 -31.831" />
-                                <path class="circle" stroke-dasharray="30, 100" d="M18 2.0845
-                a 15.9155 15.9155 0 0 1 0 31.831
-                a 15.9155 15.9155 0 0 1 0 -31.831" />
+                            <svg viewBox="0 0 38 38" class="circular-chart pt-1" v-if="this.checkObj">
+                                <path class="circle" stroke-dasharray="0, 100" d="M18 2.0845
+                                    a 15.9155 15.9155 0 0 1 0 31.831
+                                    a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                <path class="circle" stroke-dasharray="0, 100" d="M18 2.0845
+                                    a 15.9155 15.9155 0 0 1 0 31.831
+                                    a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                <path class="circle" :stroke-dasharray="String(getSpentStat('shifting'))" d="M18 2.0845
+                                    a 15.9155 15.9155 0 0 1 0 31.831
+                                    a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                <path class="circle" stroke-dasharray="0, 100" d="M18 2.0845
+                                    a 15.9155 15.9155 0 0 1 0 31.831
+                                    a 15.9155 15.9155 0 0 1 0 -31.831" />
                             </svg>
-                            <div class="text-block-info">
-                                <h2><b>232 <i class="fa fa-rub"></i></b></h2>
+                            <div class="text-block-info w-50" v-if="this.checkObj">
+                                <h3 class="text-center w-100"><b :style="this.getStatistics(0, 'spent') <= 9999 ? {fontSize: '25px'} : this.getStatistics(0, 'spent') >= 10000 && this.getStatistics(0, 'spent') <= 99999 ? {fontSize: '21px'} : this.getStatistics(0, 'spent') >= 100000 ? {fontSize: '18px'} : {}">{{ getStatistics(0, 'spent') }}</b><b><i class="fa fa-rub" style="font-size: 20px; padding-left: 5px;"></i></b></h3>
                             </div>
                         </div>
                         <div class="withdraw">
@@ -163,7 +221,7 @@ export default {
                                 <div class="two"></div><p>Супермаркеты</p>
                             </div>
                             <div class="category">
-                                <div class="three"></div><p>Транспорт</p>
+                                <div class="three"></div><p>Переводы</p>
                             </div>
                             <div class="category">
                                 <div class="four"></div><p>Подписки</p>
@@ -183,26 +241,26 @@ export default {
                         <p>Переведено</p>
                         <p>Статус</p>
                     </div>
-                    <div class="transactions-block">
-                        <span>По выбранной карте нет транзакций</span>
-                        <!-- <div class="transaction" v-for="index in 3">
+                    <div class="transactions-block" v-if="card.transactions">
+                        <span v-if="card.transactions.length == 0">По выбранной карте нет транзакций</span>
+                        <div class="transaction" v-for="transaction in card.transactions" :key="transaction._id">
                             <div class="name">
                                 <img src="@/assets/images/user.png" width="30" alt="">
-                                <p><b>Роман</b></p>
+                                <p><b>{{ transaction.reciever.firstName }}</b></p>
                             </div>
                             <div class="date">
-                                5 авг. в 19:30
+                                {{ getTime(transaction.createdAt) }}
                             </div>
                             <div class="id">
-                                ASF3213221FS
+                                {{ transaction.uniqueNumber }}
                             </div>
                             <div class="money rub-m">
-                                <b>13213</b><i class="fa fa-rub"></i>
+                                <b>{{ transaction.money }}</b><i class="fa fa-rub"></i>
                             </div>
                             <div class="status">
-                                <p class="text-success">Выполнено</p>
+                                <p class="text-success" v-text="transaction.type === 'shifting' ? 'Выполнено' : ''"></p>
                             </div>
-                        </div> -->
+                        </div>
                     </div>
                 </div>
             </div>
@@ -213,9 +271,8 @@ export default {
 <style scoped lang="scss">
     @import '@/assets/sass/dashboard.scss';
     @import '@/assets/sass/blackmode.scss';
-    // :global(*) {
-    //     background-color: black;
-    //     color: #fff;
-    // }
+    .finance, .statistics, .transactions-history, .wallet-block, .spent-diagram {
+        background-color: v-bind(backgroundBlock);
+    }
 
 </style>

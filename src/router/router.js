@@ -68,7 +68,8 @@ let avoidRoutes = [
     'dashboard',
     'cards',
     'support',
-    'transactions'
+    'transactions',
+    'oplata'
 ]
 
 router.beforeEach((from, to, next) => {

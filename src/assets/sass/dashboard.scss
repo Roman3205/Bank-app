@@ -21,7 +21,7 @@ h2, h5, p {
 }
 
 .right {
-    gap: 37px;
+    gap: 44px;
 }
 
 .block-top {
@@ -30,7 +30,6 @@ h2, h5, p {
 
 .finance, .statistics, .transactions-history, .wallet-block, .spent-diagram {
     border-radius: 10px;
-    background-color: #fff;
     height: fit-content;
     padding: 10px 20px 15px 20px;
     width: fit-content;
@@ -129,7 +128,7 @@ h2, h5, p {
     color: #fff;
     background-size: 100% 100%;
     width: 340px;
-    height: 180px;
+    height: 173px;
 
     p:nth-child(1) {
         position: absolute;
@@ -152,7 +151,7 @@ h2, h5, p {
 }
 
 .wallet-block {
-    width: 380px;
+    width: 370px;
 
     select {
         border: 3px solid lightgray;
@@ -202,21 +201,16 @@ h2, h5, p {
 .percent {
 	display: block;
 	width: 150px;
-	height: 150px;
+	height: 143px;
 }
 
 .text-block-info {
     width: fit-content;
     margin-left: 30px;
-    margin-top: -92px;
+    margin-top: -94px;
 
-    h2 {
+    h3 {
         width: fit-content;
-        font-size: 32px;
-        
-        .fa-rub {
-            font-size: 28px;
-        }
     }
 }
 
@@ -243,11 +237,23 @@ h2, h5, p {
     @include flex-mix(column, none, center, 0);
 }
 
+.blocks {
+    padding: 0;
+}
+
 .time {
-    @include flex-mix(row, none, center, 20px);
+    @include flex-mix(row-reverse, none, center, 20px);
     align-self: flex-end;
     font-size: 14px;
-    margin-left: 10px
+    margin-left: 10px;
+    margin-top: 1px;
+}
+
+.count {
+    p {
+        margin: 0!important;
+        line-height: 20.7px;
+    }
 }
 
 .withdraw .category {

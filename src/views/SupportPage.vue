@@ -2,8 +2,16 @@
 
 import axios from 'axios'
 import dayjs from 'dayjs'
+import { mapState } from 'vuex';
 
-export default {    
+export default {
+    computed: {
+        ...mapState({
+            colorChat: state =>  state.colorChat,
+            backgroundBlock: state => state.backgroundBlock,
+            background: state => state.background,
+        })
+    }    
 }
 
 </script>
@@ -49,7 +57,7 @@ export default {
                 </div>
                 <div class="send-message-form">
                     <form @submit="sendMessage">
-                        <input v-model="text" type="text" class="form-control" >
+                        <input type="text" class="form-control" >
                         <my-button-reg type="submit" class="btn-outline-primary">Отправить</my-button-reg>
                     </form>
                 </div>
@@ -62,4 +70,11 @@ export default {
     @import '@/assets/sass/support.scss';
     @import '@/assets/sass/blackmode.scss';
 
+    * {
+        color: v-bind(colorChat);
+    }
+
+    .block-box, .message-r, .message-l {
+        background-color: v-bind(backgroundBlock);
+    }
 </style>

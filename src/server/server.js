@@ -229,6 +229,9 @@ let createTransactionNumber = async () => {
 
 app.post('/registration', async (req,res) => {
     let {name, mail, password} = req.body
+    if (!name || !mail || !password) {
+        return res.status(422).send('Запрос был правильно сформирован, но не смог быть выполнен из-за переданных данных ошибок')
+    }
 
     let checkMail = await User.findOne({mail: mail})
 
@@ -260,6 +263,9 @@ app.post('/registration', async (req,res) => {
 
 app.post('/login', async (req,res) => {
     let {mail, password} = req.body
+    if (!mail || !password) {
+        return res.status(422).send('Запрос был правильно сформирован, но не смог быть выполнен из-за переданных данных ошибок')
+    }
 
     let checkExist = await User.findOne({mail: mail})
 
@@ -305,6 +311,9 @@ app.get('/user/main', VerifyUser, async (req,res) => {
 
 app.post('/user/fill', VerifyUser, async (req,res) => {
     let {lastName, patronymic} = req.body
+    if (!lastName || !patronymic) {
+        return res.status(422).send('Запрос был правильно сформирован, но не смог быть выполнен из-за переданных данных ошибок')
+    }
 
     let user = await User.findOne({_id: req.userJWT})
 
@@ -322,6 +331,9 @@ app.post('/user/fill', VerifyUser, async (req,res) => {
 
 app.post('/card/create', VerifyUser, async (req,res) => {
     let {name, surname, patronymic, date, tel} = req.body
+    if (!name || !surname || !patronymic || !date || !tel) {
+        return res.status(422).send('Запрос был правильно сформирован, но не смог быть выполнен из-за переданных данных ошибок')
+    }
 
     let user = await User.findOne({_id: req.userJWT})
 
@@ -368,7 +380,10 @@ app.post('/card/create', VerifyUser, async (req,res) => {
 })
 
 app.get('/card/get', VerifyUser, async (req,res) => {
-    let {cardNumber} = req.query
+    let {cardNumber, compressed} = req.query
+    if (!cardNumber || !compressed) {
+        return res.status(422).send('Запрос был правильно сформирован, но не смог быть выполнен из-за переданных данных ошибок')
+    }
 
     let user = await User.findOne({_id: req.userJWT})
 
@@ -376,7 +391,27 @@ app.get('/card/get', VerifyUser, async (req,res) => {
         return res.status(401).send('Вы не авторизованы')
     }
 
-    let card = await Card.findOne({uniqueCardNumber: cardNumber}).select('_id balance holdersName holdersSurname holdersPatronymic expirationDate uniqueCardNumber transactionsTo transactionsFrom')
+    let cardEx = await Card.findOne({uniqueCardNumber: cardNumber}).select('balance holdersName holdersSurname holdersPatronymic expirationDate uniqueCardNumber transactions').populate({
+        path: 'transactions',
+        options: {
+            sort: {createdAt: -1}
+        },
+        select: 'type money createdAt uniqueNumber recieverCard senderCard',
+        populate: {
+            path: 'reciever',
+            select: 'firstName'
+        }
+    })
+
+    let card
+    if(compressed == 'true') {
+        // let length = cardEx.transactions.length
+        card = cardEx
+        // card.transactions.splice(3, length - 3) либо ниже
+        card.transactions.splice(3)
+    } else if(compressed == 'false') {
+        card = cardEx
+    }
 
     if(user.cards.indexOf(card._id) < 0) {
         return res.status(409).send('Запрашиваемая карта вам не принадлежит')
@@ -391,6 +426,9 @@ app.get('/card/get', VerifyUser, async (req,res) => {
 
 app.post('/card/delete', VerifyUser, async (req,res) => {
     let {cardId} = req.body
+    if (!cardId) {
+        return res.status(422).send('Запрос был правильно сформирован, но не смог быть выполнен из-за переданных данных ошибок')
+    }
 
     let user = await User.findOne({_id: req.userJWT})
 
@@ -423,6 +461,9 @@ app.post('/card/delete', VerifyUser, async (req,res) => {
 
 app.post('/transaction/create', VerifyUser, async (req,res) => {
     let {money, fromCard, toCard} = req.body
+    if (!money || !fromCard || !toCard) {
+        return res.status(422).send('Запрос был правильно сформирован, но не смог быть выполнен из-за переданных данных ошибок')
+    }
 
     let user = await User.findOne({_id: req.userJWT})
 
@@ -451,9 +492,9 @@ app.post('/transaction/create', VerifyUser, async (req,res) => {
         subject: 'МикроБанк',
         // text: `С вашего аккаунт будет совершена операция по переводу\n Если это сделали не вы - не переходите по ссылке \n ${number}`
         html: `
-        <p>С вашего аккаунта будет совершена операция по переводу.</p>
-        <p>Если это сделали не вы, пожалуйста, проигнорируйте данное письмо.</p>
-        <span>Код подтверждения:</span> <strong><h3>${number}</h3></strong>
+            <p>С вашего аккаунта будет совершена операция по переводу.</p>
+            <p>Если это сделали не вы, пожалуйста, проигнорируйте данное письмо.</p>
+            <span>Код подтверждения:</span> <strong><h3>${number}</h3></strong>
         `
     }
 
@@ -496,6 +537,9 @@ app.post('/transaction/create', VerifyUser, async (req,res) => {
 
 app.get('/oplata/get', VerifyUser, async(req,res) => {
     let {path} = req.query
+    if (!path) {
+        return res.status(422).send('Запрос был правильно сформирован, но не смог быть выполнен из-за переданных данных ошибок')
+    }
 
     let user = await User.findOne({_id: req.userJWT})
 
@@ -514,6 +558,9 @@ app.get('/oplata/get', VerifyUser, async(req,res) => {
 
 app.post('/transaction/accept', VerifyUser, async(req,res) => {
     let {code, path} = req.body
+    if (!code || !path) {
+        return res.status(422).send('Запрос был правильно сформирован, но не смог быть выполнен из-за переданных данных ошибок')
+    }
 
     let user = await User.findOne({_id: req.userJWT})
 
@@ -532,7 +579,8 @@ app.post('/transaction/accept', VerifyUser, async(req,res) => {
 
     let difference = now.diff(operationDate, 'seconds')
     if(difference > 600) {
-        return res.status(409).send('Операция больше недействительна, так как время на ввод кода закончилось')
+        await transaction.deleteOne()
+        return res.status(404).send('Операция больше недействительна, так как время на ввод кода закончилось')
     }
 
     let check = await bcrypt.compare(code, transaction.codeNum)

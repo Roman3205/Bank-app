@@ -10,7 +10,7 @@
         name: 'my-select',
         props: {
             modelValue: {
-                type: String
+                type: [String, Number]
             },
 
             cards: {
@@ -19,9 +19,19 @@
             }
         },
 
+        mounted() {
+            if(this.cards.length != 0) {
+                this.defaultOptions(this.cards[0].uniqueCardNumber)
+            }
+        },
+
         methods: {
             changeOptions(event) {
                 this.$emit('update:modelValue', event.target.value)
+            },
+
+            defaultOptions(data) {
+                this.$emit('update:modelValue', data)
             }
         },
 
@@ -54,6 +64,7 @@ select {
     background-position: right .7em top 50%, 0 0;
     background-size: .65em auto, 100%; 
     transition: 0.7s ease;
+    color: rgb(22, 21, 21)!important;
 
     option {
         border-radius: 15px;

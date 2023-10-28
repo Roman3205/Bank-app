@@ -4,7 +4,7 @@ import NavSideBar from '@/components/NavSideBar.vue'
 import InfoBlock from '@/components/InfoBlock.vue'
 import { RouterView } from 'vue-router'
 import CookieInfo from '@/components/CookieInfo.vue'
-import { mapActions } from 'vuex'
+import { mapActions, mapState } from 'vuex'
 
 export default {
   components: {
@@ -25,6 +25,12 @@ export default {
   },
 
   computed: {
+    ...mapState({
+      color: state => state.color,
+      backgroundBlock: state => state.backgroundBlock,
+      background: state => state.background
+    }),
+
     NotFound() {
       return this.$route.name === 'notfound'
     },
@@ -104,7 +110,15 @@ export default {
 
   .main-content {
     width: 82%;
-    background-color: lightgray;
+  }
+
+  .nav-sidebar, .main-content {
+    color: v-bind(color);
+    background-color: v-bind(background);
+  }
+
+  .nav-sidebar {
+    background-color: v-bind(backgroundBlock);
   }
 
   :global(.container) {

@@ -15,6 +15,7 @@
             inputText(event) {
                 let value = event.target.value
                 this.$emit('update:model-value', value.trim())
+                console.log(this.$attrs);
             }
         },
 
@@ -38,6 +39,9 @@
         &:focus {
             background-color: inherit;
             color: #ebebeb;
+            outline: none;
+            border-color: inherit;
+            box-shadow: none;
         }
     }
 

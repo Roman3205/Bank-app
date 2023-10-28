@@ -82,7 +82,7 @@ export default {
                     <my-input v-model="password" type="password" placeholder="Пароль" autocomplete="new-password"></my-input>
                     <p class="mt-2" @click="routerAction($event, 'restore')">Не помню пароль</p>
                 </div>
-                <my-button-reg type="submit">Войти</my-button-reg>
+                <my-button-reg type="submit" class="no-secondary">Войти</my-button-reg>
                 <my-button-reg type="button" class="btn-secondary" @click="routerAction($event, 'register')">Стать клиентом</my-button-reg>
             </form>
             <transition name="alert"><div v-if="this.loginMessage !== ''" data-67cdadw class="alert text-center" :class="this.loginMessage === 'Вы вошли в аккаунт' ? 'alert-success' : 'alert-danger'">{{ loginMessage }}</div></transition>

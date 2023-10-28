@@ -42,8 +42,7 @@
 <script>
     import FillForm from '@/components/FillForm.vue'
     import axios from 'axios'
-    import { mapState } from 'vuex'
-    import { mapActions } from 'vuex'
+    import { mapState, mapActions } from 'vuex'
     import cardMixin from '@/mixins/mixin.js'
 
     export default {
@@ -67,7 +66,10 @@
 
         computed: {
             ...mapState({
-                user: state => state.mainModule.user
+                user: state => state.mainModule.user,
+                color: state => state.color,
+                backgroundBlock: state => state.backgroundBlock,
+                background: state => state.background
             }),
 
             checkData() {
@@ -173,6 +175,18 @@
         height: 130px;
         margin: 15px 0px 10px 0px;
         padding: 10px;
+    }
+
+    .create-card, .cards-all, .card {
+        background-color: v-bind(backgroundBlock);
+    }
+
+    .card {
+        background-color: v-bind(background);
+    }
+
+    p {
+        color: v-bind(color)!important;
     }
 
 </style>

@@ -1,36 +1,47 @@
 <script>
 import axios from 'axios'
 import {mapState} from 'vuex'
+import dayjs from 'dayjs'
 
 export default {
     data() {
         return {
-            paymentWayTel: false,
-            paymentWayCard: true,
-            payTelFrom: '',
-            payTelTo: '',
             payCardFrom: '',
             payCardTo: '',
             createMessage: '',
             loadingCreate: undefined,
             money: '',
+            selectedCard: '',
+            card: {}
         }
     },
 
     methods: {
-        selectPaymentWay(way) {
-            if(way === 'card') {
-                this.paymentWayTel = false
-                this.payTelFrom = ''
-                this.payTelTo = ''
-                this.paymentWayCard = true
-            } else if(way === 'tel') {
-                this.paymentWayCard = false
-                this.payCardFrom = ''
-                this.payCardTo = ''
-                this.paymentWayTel = true
-            } else {
-                return
+        getTime(date) {
+            let day = dayjs(date)
+            return day.format('D MMMM h:mm')
+        },
+
+        async getSelectedCard() {
+            try {
+                if(this.selectedCard === '') {
+                    return
+                }
+
+                let response = await axios.get('/card/get', {
+                    params: {
+                        cardNumber: this.selectedCard,
+                        compressed: false
+                    }
+                })
+
+                this.card = {...response.data}
+            } catch (error) {
+                if(error.response) {
+                    console.log('Ошибка при отправке запроса на сервер:(', error.response)
+                } else {
+                    return
+                }
             }
         },
 
@@ -81,7 +92,10 @@ export default {
 
     computed: {
         ...mapState({
-            user: state => state.mainModule.user
+            user: state => state.mainModule.user,
+            color: state => state.color,
+            backgroundBlock: state => state.backgroundBlock,
+            background: state => state.background
         }),
 
         createValid() {
@@ -97,27 +111,18 @@ export default {
         <form class="payments" @submit.prevent="createTransaction">
             <h2><b>Платежи</b></h2>
             <div class="choice">
-                <label class="with-card" for="checkCard" @click="selectPaymentWay('card')">
+                <label class="with-card" for="checkCard">
                     <div class="top">
                         <img src="@/assets/images/card.png" alt="">
                         <div class="form-check">
-                            <input class="form-check-input" name="choice" type="radio" id="checkCard" :checked="paymentWayCard">
+                            <input class="form-check-input" name="choice" type="radio" id="checkCard" checked>
                         </div>
                     </div>
                     <p>По номеру карты</p>
                 </label>
-                <label class="with-tel" for="checkTel" @click="selectPaymentWay('tel')">
-                    <div class="top">
-                        <img src="@/assets/images/tel.png" alt="" style="width: 23.5px;">
-                        <div class="form-check">
-                            <input class="form-check-input" name="choice" type="radio" id="checkTel" :checked="paymentWayTel">
-                        </div>
-                    </div>
-                    <p>По номеру телефона</p>
-                </label>
             </div>
             <h3 class="mt-4"><b>Оформление перевода</b></h3>
-            <div class="payment-to" v-if="paymentWayCard">
+            <div class="payment-to">
                 <div class="from">
                     <h3><b>С карты</b></h3>
                     <input v-model.trim="payCardFrom" type="number" required pattern="[0-9]{16}" class="form-control" maxlength="16" placeholder="Номер вашей карты">
@@ -128,17 +133,6 @@ export default {
                     <input v-model.trim="payCardTo" type="number" required pattern="[0-9]{16}" class="form-control" maxlength="16" placeholder="Номер карты получателя">
                 </div>
             </div>
-            <div class="payment-to" v-if="paymentWayTel">
-                <div class="from">
-                    <h3><b>С карты (по телефону)</b></h3>
-                    <input v-model.trim.number="payTelFrom" type="tel" required pattern="[0-9]{16}" class="form-control" maxlength="16" placeholder="Номер привязанного телефона">
-                </div>
-                <i class="fa fa-chevron-right"></i>
-                <div class="to">
-                    <h3><b>На карту (по телефону)</b></h3>
-                    <input v-model.trim="payTelTo" type="tel" required pattern="[0-9]{16}" class="form-control" maxlength="16" placeholder="Номер телефона получателя">
-                </div>
-            </div>
             <my-input-card min="5" max="10000" v-model.trim.number="money" placeholder="Сумма, руб." type="number"></my-input-card>
             <hr>
             <div class="submit">
@@ -147,9 +141,9 @@ export default {
             </div>
             <transition name="alert"><div v-if="this.createMessage !== ''" class="alert text-center" data-67cdadw :class="this.createMessage === 'Перенаправляем вас на страницу подтверждения' ? 'alert-success' : 'alert-danger'">{{ createMessage }}</div></transition>
         </form>
-        <div class="transactions-history">
+        <div class="transactions-history" v-if="user.cards">
             <div class="nav-info">
-                <h2 class="mb-3"><b>Операции</b><h5 class="text-secondary">(всего 3 операции по данной карте)</h5></h2>
+                <h2 class="mb-3"><b>Операции</b><h5 v-if="card.transactions" class="text-secondary">(всего {{ card.transactions.length }} операции по данной карте)</h5></h2>
                 <div class="d-block"><div class="d-flex gap-3 align-items-center"><h4 style="margin: 0;">По карте:</h4><img src="@/assets/images/cardWallet.png" width="50" alt=""></div>
                     <my-select class="mt-1" v-model.trim="selectedCard" @update:modelValue="getSelectedCard" :cards="user.cards"></my-select>
                 </div>
@@ -162,23 +156,24 @@ export default {
                     <p>Переведено</p>
                     <p>Статус</p>
                 </div>
-                <div class="transactions-block">
-                    <div class="transaction" v-for="index in 3">
+                <div class="transactions-block" v-if="card.transactions">
+                    <span v-if="card.transactions.length == 0">По выбранной карте нет транзакций</span>
+                    <div class="transaction" v-for="transaction in card.transactions" :key="transaction._id">
                         <div class="name">
-                            <img src="@/assets/images/user.png" width="30" alt="">
-                            <p><b>Роман</b></p>
+                        <img src="@/assets/images/user.png" width="30" alt="">
+                            <p><b v-text="user._id == transaction.reciever._id ? 'Пополнение' : transaction.reciever.firstName"></b></p>
                         </div>
                         <div class="date">
-                            5 авг. в 19:30 2023
+                            {{ getTime(transaction.createdAt) }}
                         </div>
                         <div class="id">
-                            ASF3213221FS
+                            {{ transaction.uniqueNumber }}
                         </div>
                         <div class="money rub-m">
-                            <b>13213</b><i class="fa fa-rub"></i>
+                            <b>{{ transaction.money }}</b><i class="fa fa-rub"></i>
                         </div>
                         <div class="status">
-                            <p class="text-success">Выполнено</p>
+                            <p class="text-success" v-text="transaction.type === 'shifting' ? 'Выполнено' : ''"></p>
                         </div>
                     </div>
                 </div>
@@ -192,4 +187,15 @@ export default {
     @import '@/assets/sass/blackmode.scss';
     @import '@/assets/sass/alertElem.scss';
 
+    .payments, .transactions-history {
+        background-color: v-bind(backgroundBlock);
+    }
+
+    .from, .to, .with-card, .transaction {
+        background-color: v-bind(background);
+    }
+
+    .transactions-history .nav-info h5, .payments p {
+        color: v-bind(color)!important;
+    }
 </style>
