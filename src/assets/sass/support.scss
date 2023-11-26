@@ -1,7 +1,3 @@
-* {
-    overflow: hidden;
-}
-
 %layout {
     width: fit-content;
     display: flex;
@@ -80,7 +76,7 @@ form {
 }
 
 .send-message-form input {
-    width: 83%;
+    width: 88%;
     height: 40px;
     border: none;
     border-radius: 10px;
@@ -91,6 +87,44 @@ form {
 .send-message-form button {
     width: 17%;
     height: 40px;
+}
+
+.button-sender-block {
+    width: 15%;
+}
+
+.spinner {
+    animation: rotator 2.4s linear infinite;
+    width: 41px;
+    height: 40.5px;
+    background-color: inherit;
+}
+  
+@keyframes rotator {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(270deg); }
+}
+  
+.path {
+    stroke-dasharray: 187;
+    stroke-dashoffset: 0;
+    transform-origin: center;
+    stroke: rgb(106, 167, 253);
+    animation: dash 2.4s ease-in-out infinite;
+}
+  
+@keyframes dash {
+    0% { stroke-dashoffset: 187; }
+    50% {
+        stroke-dashoffset: 333;
+        transform:rotate(135deg);
+    }
+
+    100% {
+        stroke-dashoffset: 187;
+        transform:rotate(450deg);
+    }
+  
 }
 
 .messages-container {
@@ -143,7 +177,7 @@ form {
     background-color: #fff;
     border-radius: 5px;
     margin-bottom: 10px;
-    flex: 1 0 auto;
+    // flex: 1 0 auto;
 
     .writer {
         align-self: flex-end

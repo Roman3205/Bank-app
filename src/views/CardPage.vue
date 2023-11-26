@@ -47,7 +47,7 @@
 </template>
 
 <script>
-    import FillForm from '@/components/FillForm.vue'
+    import FillForm from '@/components/FIllForm.vue'
     import axios from 'axios'
     import { mapState, mapActions } from 'vuex'
     import cardMixin from '@/mixins/mixin.js'
@@ -122,11 +122,15 @@
                 } catch (error) {
                     if(error.response) {
                         this.deleteMessage = error.response.data
-                        console.log('Ошибка при отправке запроса на сервер:(')
+                        console.log('Ошибка при отправке запроса на сервер:(', error)
                         return this.loadingDelete = false
                     } else {
                         return
                     }
+                } finally {
+                    await new Promise(prom => setTimeout(prom, 2400)).then(() => {
+                        this.deleteMessage = ''
+                    })
                 }
             },
 
@@ -176,6 +180,10 @@
                     } else {
                         return
                     }
+                } finally {
+                    await new Promise(prom => setTimeout(prom, 2400)).then(() => {
+                        this.createMessage = ''
+                    })
                 }
             }
         }

@@ -115,20 +115,21 @@ import {mapActions} from 'vuex'
                         code: this.code
                     }).then(async (response) => {
                         if(response.data.payload && response.data.redirectTo && response.data.routePay) {
-                            window.location.href = String(response.data.redirectTo)
                             await axios.post(String(response.data.routePay), {
                                 codePay: response.data.payload
+                            }).then(() => {
+                                window.location.href = String(response.data.redirectTo)
                             })
+                        } else {
+                            this.code = ''
+                            this.acceptMessage = 'Операция подтверждена'
+                            this.loadingAccept = false
+
+                            await promReturn()
+
+                            this.loadUser()
                         }
                     })
-
-                    this.code = ''
-                    this.acceptMessage = 'Операция подтверждена'
-                    this.loadingAccept = false
-
-                    await promReturn()
-
-                    this.loadUser()
                 } catch (error) {
                     if(error.response && error.response.status === 409 && error.response.data !== 'Транзакции не существует') {
                         console.log('Ошибка при отправке запроса на сервер:(\n', error.response.data)

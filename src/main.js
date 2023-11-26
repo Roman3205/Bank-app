@@ -3,7 +3,7 @@ import axios from 'axios'
 // const port = import.meta.env.VITE_BACKEND_PORT
 
 // axios.defaults.baseURL = 'http://localhost:3777'
-// axios.defaults.baseURL =
+axios.defaults.baseURL = 'https://onlinebank.onrender.com'
 axios.defaults.withCredentials = true
 
 import dayjs from 'dayjs'

@@ -11,7 +11,70 @@ export default {
             backgroundBlock: state => state.backgroundBlock,
             background: state => state.background,
         })
-    }    
+    },
+    
+    data() {
+        return {
+            textPrompt: '',
+            loadingReq: false,
+            messages: []
+        }
+    },
+
+    mounted() {
+        this.loadMessages()
+    },
+
+    methods: {
+        getDateMessage(date) {
+            let day = dayjs(date)
+            return day.format('HH:mm D MMMM')
+        },
+
+        scrollBottom() {
+            let el = document.querySelector('.messages-container')
+            el.scrollTop = el.scrollHeight
+        },
+
+        async postMessage() {
+            try {
+                if (this.textPrompt !== '') {
+                    this.loadingReq = true
+                    await axios.post('/support/ask', {
+                        prompt: this.textPrompt
+                    }).then(() => {
+                        this.loadMessages()
+                        this.textPrompt = ''
+                    })
+                }
+            } catch (error) {
+                if(error.response) {
+                    console.log('Ошибка при отправке запроса на сервер:(', error)
+                } else {
+                    return
+                }
+            } finally {
+                this.loadingReq = false
+            }
+        },
+
+        async loadMessages() {
+            try {
+                axios.get('/support/messages').then((response) => {
+                    this.messages = response.data.messages
+                    this.$nextTick(() => {
+                    this.scrollBottom()
+                })
+                })
+            } catch (error) {
+                if(error.response) {
+                    console.log('Ошибка при отправке запроса на сервер:(', error)
+                } else {
+                    return
+                }
+            }
+        }
+    }
 }
 
 </script>
@@ -26,39 +89,37 @@ export default {
                     </div>
                 </div>
                 <div class="messages-container">
-                    <h5 style="text-align: center;">Сообщений пока нет</h5>
-                    <div class="message-r">
-                        <div class="writer">
-                            <img src="@/assets/images/user.png" width="50" alt="">
+                    <h5 style="text-align: center;" v-if="this.messages.length == 0">Сообщений пока нет</h5>
+                    <section v-for="message, index in messages" :key="index">
+                        <div class="message-r">
+                            <div class="writer">
+                                <img src="@/assets/images/user.png" width="50" alt="">
+                            </div>
+                            <div class="text-message">
+                                <div>{{ message.question }}</div>
+                                <div class="date left"><p><sub>{{ getDateMessage(message.createdAt) }}</sub></p></div>
+                            </div>
                         </div>
-                        <div class="text-message">
-                            <div>Тестовое сообщение</div>
-                            <div class="date left"><p><sub>12:25 6 августа</sub></p></div>
+                        <div class="message-l">
+                            <div class="writer">
+                                <img src="@/assets/images/assistant.png" width="40" alt="">
+                            </div>
+                            <div class="text-message">
+                                <div>{{ message.answer }}</div>
+                                <div class="date left"><p><sub>{{ getDateMessage(message.createdAt) }}</sub></p></div>
+                            </div>
                         </div>
-                    </div>
-                    <div class="message-r">
-                        <div class="writer">
-                            <img src="@/assets/images/user.png" width="50" alt="">
-                        </div>
-                        <div class="text-message">
-                            <div>Тестовое сообщение</div>
-                            <div class="date left"><p><sub>12:25 6 августа</sub></p></div>
-                        </div>
-                    </div>
-                    <div class="message-l">
-                        <div class="writer">
-                            <img src="@/assets/images/assistant.png" width="40" alt="">
-                        </div>
-                        <div class="text-message">
-                            <div>Lorem ipsum dolor sit, amet consectetur adipisicing elit. Hic nobis maiores, ea cupiditate voluptatum ad minima, exercitationem dolorum deleniti explicabo necessitatibus minus sint fuga voluptate earum dolor libero corrupti assumenda eligendi in quis distinctio iusto quasi delectus. Eligendi blanditiis ipsam molestiae? Totam pariatur sed quis dolorum numquam, quod vero recusandae officia enim iusto iste delectus dolor voluptate assumenda maiores fuga dolorem necessitatibus. Incidunt voluptas nulla illum possimus ipsa, fugit quae accusamus eius ipsam recusandae cumque officia et itaque, rem ratione exercitationem non temporibus quia, quas tenetur cupiditate. Sapiente nihil minima quas autem fuga voluptas perferendis magnam laborum ducimus cum. Quaerat quibusdam deleniti cumque hic, doloremque reprehenderit id aliquam laborum illum molestiae nobis laboriosam voluptas, illo repellat odio ipsum quos voluptatem. Omnis fugit blanditiis earum nobis, quisquam mollitia ducimus ipsa eius praesentium ad, assumenda voluptatibus dolore exercitationem, quia asperiores quae dolorem voluptates accusantium. Ex exercitationem nemo beatae dicta libero quis accusamus. Cumque sunt veritatis quo voluptatem deserunt, iusto asperiores totam omnis assumenda, facilis unde soluta? Assumenda mollitia repudiandae, architecto et itaque error debitis sit, consequatur blanditiis cum at vel deleniti culpa. Quos inventore quo nesciunt temporibus ipsum ipsa labore suscipit harum cupiditate, illum ipsam molestias vero, dolore ad, culpa eius. Quam.</div>
-                            <div class="date left"><p><sub>12:25 6 августа</sub></p></div>
-                        </div>
-                    </div>
+                    </section>
                 </div>
                 <div class="send-message-form">
-                    <form @submit="sendMessage">
-                        <input type="text" class="form-control" >
-                        <my-button-reg type="submit" class="btn-outline-primary">Отправить</my-button-reg>
+                    <form @submit.prevent="postMessage">
+                        <input type="text" placeholder="Введите ваш вопрос" v-model.trim="textPrompt" class="form-control" >
+                        <div class="button-sender-block text-center">
+                            <my-button-reg type="submit" class="w-100 btn-outline-primary" v-if="!loadingReq">Отправить</my-button-reg>
+                            <svg v-else class="spinner" viewBox="0 0 66 66">
+                                <circle class="path" cy="33" cx="33" r="30" fill="none" stroke-linecap="rounded" stroke-width="6"></circle>
+                            </svg>
+                        </div>
                     </form>
                 </div>
             </div>

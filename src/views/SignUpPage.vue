@@ -59,6 +59,10 @@ export default {
                 } else {
                     return
                 }
+            } finally {
+                await new Promise(prom => setTimeout(prom, 2400)).then(() => {
+                    this.regMessage = ''
+                })
             }
         },
 

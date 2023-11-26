@@ -113,8 +113,6 @@ export default {
                 })
 
                 let typedSpentTransactions = spentTransactions.filter(elem => elem.type == type)
-
-                console.log(typedSpentTransactions.length);
                 if (typedSpentTransactions.length == 0) {
                     return -1
                 } 

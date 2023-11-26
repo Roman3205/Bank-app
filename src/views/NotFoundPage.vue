@@ -8,10 +8,6 @@ export default {
                 name: goTo
             })
         }
-    },
-
-    created() {
-        console.log('on');
     }
 }
 

@@ -86,6 +86,10 @@ export default {
                 } else {
                     return this.loadingCreate = false
                 }
+            } finally {
+                await new Promise(prom => setTimeout(prom, 2400)).then(() => {
+                    this.createMessage = ''
+                })
             }
         }
     },

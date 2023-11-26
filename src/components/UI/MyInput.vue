@@ -15,7 +15,6 @@
             inputText(event) {
                 let value = event.target.value
                 this.$emit('update:model-value', value.trim())
-                console.log(this.$attrs);
             }
         },
 

@@ -5,7 +5,6 @@ import InfoBlock from '@/components/InfoBlock.vue'
 import { RouterView } from 'vue-router'
 import CookieInfo from '@/components/CookieInfo.vue'
 import { mapActions, mapState } from 'vuex'
-import OplataPage from '@/views/OplataPage.vue'
 import NotFound from '@/views/NotFoundPage.vue'
 import OplataFillPage from '@/views/OplataFillPage.vue'
 
@@ -15,7 +14,6 @@ export default {
     RouterView,
     InfoBlock,
     CookieInfo,
-    OplataPage,
     NotFound,
     OplataFillPage
 },
@@ -93,7 +91,7 @@ export default {
     <!-- </teleport> -->
   </div>
   <not-found v-else-if="NotFound"></not-found>
-  <oplata-page v-else-if="Oplata"></oplata-page>
+  <router-view v-else-if="Oplata"></router-view>
   <oplata-fill-page v-else-if="OplataFill"></oplata-fill-page>
   <div class="auth-menu" v-else-if="Auth">
       <router-view></router-view>
