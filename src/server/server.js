@@ -23,12 +23,10 @@ let transporter = nodemailer.createTransport({
 })
 
 let backPort = process.env.VITE_BACKEND_PORT
-let backHost = process.env.VITE_BACKEND_HOST
-let frontPort = process.env.FRONTEND_PORT
-let frontHost = process.env.FRONTEND_HOST
+let backHost = process.env.BACKEND_HOST
 
 app.listen(backPort, () => {
-    console.log('http://' + backHost + ':' + backPort);
+    console.log(backHost);
 })
 
 let cors = require('cors')
@@ -40,15 +38,16 @@ app
     .use(express.json())
     .use(cookieParser())
     .use(cors({
-        origin: 'http://' + frontHost + ':' + frontPort,
+        origin: [process.env.URL_SELF, process.env.URL_MP],
         credentials: true
     }))
 
-
 let mongoose = require('mongoose')
 let uri = process.env.MONGODB_HOST
-mongoose.connect(uri)
-
+mongoose.connect(uri).catch(error => {
+    console.log('Произошла ошибка с подключением бд');
+})
+// сделать валидацию ВСЕХ полей, длина обрезка и тд. Отработать ошибки при создании новых доков
 let userSchema = new mongoose.Schema({
     firstName: String,
     lastName: String,
@@ -99,11 +98,12 @@ let cardMessage = new mongoose.Schema({
         type: String,
         ref: 'user'
     },
-    expirationDate: Date,
     expenses: {
         type: Number,
         min: 0
     },
+    expirationDate: Date,
+    CVV: Number,
     uniqueCardNumber: Number,
     transactions: [{
         type: mongoose.ObjectId,
@@ -135,7 +135,8 @@ let transactionSchema = new mongoose.Schema({
     },
     recieverCard: Number,
     pathNum: String,
-    codeNum: String
+    codeNum: String,
+    payloadCode: String
 }, {
     timestamps: true
 })
@@ -207,6 +208,13 @@ let createNumber = async () => {
             return result
         }
     }
+}
+
+let createRandomCVV = () => {
+    let min = 111
+    let max = 999
+    
+    return Math.floor(Math.random() * (max - min) + min)
 }
 
 let randomTransactionNumber = () => {
@@ -360,8 +368,9 @@ app.post('/card/create', VerifyUser, async (req,res) => {
         holdersName: name,
         holdersSurname: surname,
         holdersPatronymic: patronymic,
-        expirationDate: new Date(Date.now() + 365 * 24*3600*1000),
         expenses: 0,
+        expirationDate: new Date(Date.now() + 365 * 24*3600*1000),
+        CVV: createRandomCVV(),
         uniqueCardNumber: await createCardNumber(),
         transactionsTo: [],
         transactionsFrom: [],
@@ -437,7 +446,7 @@ app.post('/card/delete', VerifyUser, async (req,res) => {
     }
 
     // let card = await Card.findOneAndDelete({_id: cardId})
-    let card = await Card.findOne({_id: cardId})
+    let card = await Card.findOne({uniqueCardNumber: cardId})
 
     if(!card) {
         return res.status(409).send('Карта не найдена')
@@ -459,10 +468,104 @@ app.post('/card/delete', VerifyUser, async (req,res) => {
     res.sendStatus(200)
 })
 
+app.post('/transaction/crypt', async (req,res) => {
+    let {money, toCard, unique, redirectTo, routeTopUp, userId} = req.body
+    if (!money || !toCard) {
+        return res.status(422).send('Запрос был правильно сформирован, но не смог быть выполнен из-за переданных ошибок')
+    }
+
+    let payload = jwt.sign({money: money, card: toCard, unique: unique, redirectTo: redirectTo, routeTopUp: routeTopUp, userId: userId}, process.env.CRYPTION_PAYMENT, {algorithm: 'HS256'})
+ 
+    res.status(200).send({path: payload.replace(/\./g, '2EE'), urlBank: `${process.env.URL_SELF}`})
+})
+
+app.post('/payment/create', async (req,res) => {
+    let {payload, cvv, cardNum, dateExp} = req.body
+    if (!payload || !cvv || !cardNum || !dateExp) {
+        return res.status(422).send('Запрос был правильно сформирован, но не смог быть выполнен из-за переданных ошибок')
+    }
+
+    jwt.verify(payload.replace(/2EE/g, '.'), process.env.CRYPTION_PAYMENT, (error, decoded) => {
+        if(error) {
+            return res.status(409).send('Ошибка передачи данных на сервер')
+        }
+        
+        req.money = decoded.money
+        req.cardLoad = decoded.card
+    })
+    if (!req.cardLoad || !req.money) {
+        return res.status(409).send('Ошибка передачи данных на сервер')
+    }
+
+    let cardSender = await Card.findOne({uniqueCardNumber: cardNum})
+    if(!cardSender) {
+        return res.status(409).send('Карта не найдена или данные не верны')
+    }
+
+    let cardReciever = await Card.findOne({uniqueCardNumber: req.cardLoad})
+
+    if(cardSender.CVV != cvv || dayjs(cardSender.expirationDate).format('YYYY-MM') != dateExp) {
+        return res.status(409).send('Данные не верны')
+    } else if(String(cardSender._id) === String(cardReciever._id)) {
+        return res.status(409).send('Нельзя перевести деньги на свою же карту')
+    } else if(req.money > cardSender.balance) {
+        return res.status(409).send('Недостаточно средств на балансе вашей карты')
+    }
+
+    let number = Math.floor(Math.random() * (999999-111111) + 111111)
+
+    let userCard = await User.findOne({cards: {$elemMatch: {$eq: {_id: cardSender._id}}}})
+    let mailOptions = {
+        from: process.env.YANDEX_MAIL,
+        to: `${userCard.mail}`,
+        subject: 'Микробанк',
+        html: `
+            <p>С вашего аккаунта будет совершена операция по оплате.</p>
+            <p>Если это сделали не вы, пожалуйста, проигнорируйте данное письмо.</p>
+            <span>Код подтверждения:</span> <strong><h3>${number}</h3></strong>
+        `
+    }
+
+    transporter.sendMail(mailOptions, (error, info) => {
+        if (error) {
+            return console.log('Произошла ошибка с отправкой кода подтверждения: ' + error);
+        }
+    })
+
+    let salt = await bcrypt.genSalt(10)
+    let codeNum = await bcrypt.hash(String(number), salt)
+    let recieverCard = await User.findOne({cards: {$elemMatch: {$eq: {_id: String(cardReciever._id)}}}})
+
+    if(!recieverCard) {
+        return res.status(409).send('Получатель не найден')
+    }
+
+    let path = await createNumber()
+
+    let transaction = new Transaction({
+        type: 'waiting-for-payment',
+        money: req.money,
+        uniqueNumber: await createTransactionNumber(),
+        sender: userCard._id,
+        senderCard: Number(cardSender.uniqueCardNumber),
+        reciever: recieverCard._id,
+        recieverCard: Number(cardReciever.uniqueCardNumber),
+        pathNum: path,
+        codeNum: codeNum,
+        payloadCode: payload.replace(/\./g, '2EE')
+    })
+    
+    await transaction.save()
+
+    res
+        .status(200)
+        .send({oplata: path})
+})
+
 app.post('/transaction/create', VerifyUser, async (req,res) => {
     let {money, fromCard, toCard} = req.body
     if (!money || !fromCard || !toCard) {
-        return res.status(422).send('Запрос был правильно сформирован, но не смог быть выполнен из-за переданных данных ошибок')
+        return res.status(422).send('Запрос был правильно сформирован, но не смог быть выполнен из-за переданных ошибок')
     }
 
     let user = await User.findOne({_id: req.userJWT})
@@ -535,16 +638,10 @@ app.post('/transaction/create', VerifyUser, async (req,res) => {
         .send({oplata: path})
 })
 
-app.get('/oplata/get', VerifyUser, async(req,res) => {
+app.get('/oplata/get', async(req,res) => {
     let {path} = req.query
     if (!path) {
         return res.status(422).send('Запрос был правильно сформирован, но не смог быть выполнен из-за переданных данных ошибок')
-    }
-
-    let user = await User.findOne({_id: req.userJWT})
-
-    if(!user) {
-        return res.status(401).send('Вы не авторизованы')
     }
 
     let transaction = await Transaction.findOne({pathNum: path}).select('type money createdAt recieverCard')
@@ -556,16 +653,10 @@ app.get('/oplata/get', VerifyUser, async(req,res) => {
     res.status(200).send(transaction)
 })
 
-app.post('/transaction/accept', VerifyUser, async(req,res) => {
+app.post('/transaction/accept', async(req,res) => {
     let {code, path} = req.body
     if (!code || !path) {
         return res.status(422).send('Запрос был правильно сформирован, но не смог быть выполнен из-за переданных данных ошибок')
-    }
-
-    let user = await User.findOne({_id: req.userJWT})
-
-    if(!user) {
-        return res.status(401).send('Вы не авторизованы')
     }
 
     let transaction = await Transaction.findOne({pathNum: path})
@@ -578,7 +669,7 @@ app.post('/transaction/accept', VerifyUser, async(req,res) => {
     let now = dayjs()
 
     let difference = now.diff(operationDate, 'seconds')
-    if(difference > 600) {
+    if(difference > 300) {
         await transaction.deleteOne()
         return res.status(404).send('Операция больше недействительна, так как время на ввод кода закончилось')
     }
@@ -599,8 +690,10 @@ app.post('/transaction/accept', VerifyUser, async(req,res) => {
     let sender = await User.findOne({cards: {$elemMatch: {$eq: String(senderCardNum._id)}}})
     let reciever = await User.findOne({cards: {$elemMatch: {$eq: String(recieverCardNum._id)}}})
 
-    if(!reciever || !sender) {
+    if(!reciever) {
         return res.status(409).send('Получатель не найден')
+    } else if (!sender) {
+        return res.status(409).send('Вы не зарегистрированы')
     }
 
     senderCardNum.balance = Number(senderCardNum.balance) - Number(transaction.money)
@@ -622,9 +715,23 @@ app.post('/transaction/accept', VerifyUser, async(req,res) => {
     transaction.pathNum = null
     transaction.codeNum = null
 
+    if(transaction.payloadCode != null) {
+        jwt.verify(transaction.payloadCode.replace(/2EE/g, '.'), process.env.CRYPTION_PAYMENT, (error, decoded) => {
+            if(error) {
+                return res.status(409).send('Ошибка передачи данных на сервер')
+            }
+            
+            req.redirectTo = decoded.redirectTo
+            req.payload = decoded.unique
+            req.routePay = decoded.routeTopUp
+        })
+
+        transaction.payloadCode = null
+    }
+
     await transaction.save()
 
-    res.sendStatus(200)
+    res.status(200).send({payload: req.payload, routePay: req.routePay, redirectTo: req.redirectTo})
 })
 
 

@@ -1,6 +1,13 @@
 <template>
     <div class="container">
         <fill-form v-if="checkData" v-model:show="formVisible"></fill-form>
+        <Transition name="warning">
+            <div v-if="showWarning" class="warning">
+                <i class="fa fa-times" @click.prevent="closeWarningFunc()" style="font-size: 22px; cursor: pointer; position: absolute; top: 5px; right: 5px;"></i>
+                <p>Вы действительно желаете удалить карту <span style="font-size: large;"><b>{{ warningCard }}</b></span>?</p>
+                <my-button-reg class="w-100" :disabled="loadingDelete" @click.prevent="deleteCard(warningCard)">Удалить</my-button-reg>
+            </div>
+        </Transition>
         <div class="wrapper">
             <form class="create-card" @submit.prevent="createCard">
                 <h2><b>Создание карты</b></h2>
@@ -31,7 +38,7 @@
                             <img src="@/assets/images/cardWallet.png" width="50" alt="">
                             <p>{{ getNumberCorrect(card.uniqueCardNumber) }}</p>
                         </div>
-                        <my-button-reg :disabled="loadingDelete" class="btn-danger text-white" @click.prevent="deleteCard(card._id)">Закрыть карту</my-button-reg>
+                        <my-button-reg class="btn-danger text-white" @click.prevent="showWarningFunc(card.uniqueCardNumber)">Закрыть карту</my-button-reg>
                     </div>
                 </transition-group>
             </div>
@@ -60,7 +67,9 @@
                 createMessage: '',
                 deleteMessage: '',
                 loadingCreate: undefined,
-                loadingDelete: undefined
+                loadingDelete: undefined,
+                showWarning: false,
+                warningCard: ''
             }
         },
 
@@ -78,13 +87,24 @@
         },
 
         methods: {
+            showWarningFunc(id) {
+                this.showWarning = true
+                this.warningCard = id
+            },
+            
+            closeWarningFunc() {
+                this.showWarning = false
+                this.warningCard = ''
+            },
+
             ...mapActions({
                 loadUser: 'mainModule/loadUser'
             }),
 
             async deleteCard(id) {
+                this.loadingDelete = true
                 try {
-                    this.loadingDelete = true
+                    this.closeWarningFunc()
                     this.deleteMessage = ''
 
                     await axios.post('/card/delete', {
@@ -164,8 +184,43 @@
 
 <style lang="scss" scoped>
     @import '@/assets/sass/cardpage.scss';
-    // @import '@/assets/sass/blackmode.scss';
     @import '@/assets/sass/alertElem.scss';
+
+    .warning {
+        position: fixed;
+        top: 40px;
+        left: calc(50% - 165px);
+        right: 50%;
+        background-color: rgb(190, 190, 190);
+        border: 2px solid gray;
+        padding: 30px 10px 10px 10px;
+        border-radius: 10px;
+        z-index: 990;
+        width: 320px;
+        text-align: center;
+    }
+
+    .warning-enter-from {
+        opacity: 0;
+        transition: all .7s ease-out;
+        transform: translateY(-50px);
+    }
+
+    .warning-enter-to {
+        opacity: 1;
+        transition: all .7s ease-out;
+    }
+
+    .warning-leave-from {
+        transition: all .7s ease-in;
+        opacity: 0;
+    }
+
+    .warning-leave-to {
+        opacity: 0;
+        transition: all .7s ease-in;
+        transform: translateY(-50px);
+    }
 
     .card-photo {
         background: url('@/assets/images/cardWallet.png') no-repeat center center;

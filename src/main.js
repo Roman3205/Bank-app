@@ -2,7 +2,8 @@ import axios from 'axios'
 // const host = import.meta.env.VITE_BACKEND_HOST
 // const port = import.meta.env.VITE_BACKEND_PORT
 
-axios.defaults.baseURL = 'http://localhost:3777'
+// axios.defaults.baseURL = 'http://localhost:3777'
+// axios.defaults.baseURL =
 axios.defaults.withCredentials = true
 
 import dayjs from 'dayjs'

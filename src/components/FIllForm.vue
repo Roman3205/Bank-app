@@ -78,7 +78,6 @@
 </script>
 
 <style lang="scss" scoped>
-@import '@/assets/sass/blackmode.scss';
 @import '@/assets/sass/alertElem.scss';
 
     .fill-info {

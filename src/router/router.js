@@ -7,6 +7,7 @@ import LoginPage from '@/views/LoginPage.vue'
 import SingUpPage from '@/views/SignUpPage.vue'
 import NotFoundPage from '@/views/NotFoundPage.vue'
 import RestorePage from '@/views/RestorePage.vue'
+import OplataFillPage from '@/views/OplataFillPage.vue'
 
 let router = createRouter({
     history: createWebHistory(),
@@ -60,6 +61,11 @@ let router = createRouter({
             path: '/oplata/:key',
             name: 'oplata',
             component: () => import('@/views/OplataPage.vue')
+        },
+        {
+            path: '/payment/:crypt(.*)',
+            name: 'oplataFill',
+            component: OplataFillPage
         }
     ]
 })
@@ -69,7 +75,6 @@ let avoidRoutes = [
     'cards',
     'support',
     'transactions',
-    'oplata'
 ]
 
 router.beforeEach((from, to, next) => {
@@ -77,7 +82,7 @@ router.beforeEach((from, to, next) => {
         router.push('/login')
     } else {
         next()
-    }
+    }   
 })
 
 export default router

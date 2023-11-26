@@ -18,23 +18,42 @@ let store = createStore({
         }
     },
     actions: {
-        changeTheme({commit}) {
-            commit('changeThemeFunc', {
-                backgroundBlock: 'rgb(78, 78, 78)',
-                color: '#fff',
-                background: 'rgb(22, 21, 21)',
-                sideBarColor: '#fff',
-            })
+        changeTheme() {
+            if(localStorage.getItem('colorTheme')) {
+                localStorage['colorTheme'] = 'dark'
+            } else {
+                localStorage.setItem('colorTheme', 'dark')
+            }
+            
+            this.dispatch('setColorTheme')
         },
 
-        changeThemeDefault({commit}) {
-            commit('changeThemeFunc', {
-                backgroundBlock: '#fff',
-                color: 'rgb(22, 21, 21)',
-                colorChat: 'rgb(22, 21, 21)',
-                background: 'lightgray',
-                sideBarColor: '#3B71CA'
-            })
+        changeThemeDefault() {
+            if(localStorage.getItem('colorTheme')) {
+                localStorage['colorTheme'] = 'light'
+            } else {
+                localStorage.setItem('colorTheme', 'light')
+            }
+            
+            this.dispatch('setColorTheme')
+        },
+
+        setColorTheme({commit}) {
+            if(localStorage.getItem('colorTheme') && localStorage['colorTheme'] === 'dark') {
+                commit('changeThemeFunc', {
+                    backgroundBlock: 'rgb(78, 78, 78)',
+                    color: '#fff',
+                    background: 'rgb(22, 21, 21)',
+                    sideBarColor: '#fff',
+                })
+            } else if(localStorage['colorTheme'] === 'light') {
+                commit('changeThemeFunc', {
+                    backgroundBlock: '#fff',
+                    color: 'rgb(22, 21, 21)',
+                    background: 'lightgray',
+                    sideBarColor: '#3B71CA'
+                })
+            }
         }
     },
     modules: {

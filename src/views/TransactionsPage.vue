@@ -19,7 +19,7 @@ export default {
     methods: {
         getTime(date) {
             let day = dayjs(date)
-            return day.format('D MMMM h:mm')
+            return day.format('D MMMM H:mm')
         },
 
         async getSelectedCard() {
@@ -125,12 +125,12 @@ export default {
             <div class="payment-to">
                 <div class="from">
                     <h3><b>С карты</b></h3>
-                    <input v-model.trim="payCardFrom" type="number" required pattern="[0-9]{16}" class="form-control" maxlength="16" placeholder="Номер вашей карты">
+                    <input v-model.trim="payCardFrom" type="number" required pattern="[0-9]{16}" class="form-control" placeholder="Номер вашей карты">
                 </div>
                 <i class="fa fa-chevron-right"></i>
                 <div class="to">
                     <h3><b>На карту</b></h3>
-                    <input v-model.trim="payCardTo" type="number" required pattern="[0-9]{16}" class="form-control" maxlength="16" placeholder="Номер карты получателя">
+                    <input v-model.trim="payCardTo" type="number" required pattern="[0-9]{16}" class="form-control" placeholder="Номер карты получателя">
                 </div>
             </div>
             <my-input-card min="5" max="10000" v-model.trim.number="money" placeholder="Сумма, руб." type="number"></my-input-card>
@@ -169,8 +169,8 @@ export default {
                         <div class="id">
                             {{ transaction.uniqueNumber }}
                         </div>
-                        <div class="money rub-m">
-                            <b>{{ transaction.money }}</b><i class="fa fa-rub"></i>
+                        <div class="money rub-m" :style="transaction.senderCard == card.uniqueNumber ? {color: 'green'} : {color: 'red'}">
+                            <b><i v-text="transaction.senderCard == card.uniqueNumber ? '+' : '-'"></i>{{ transaction.money }}</b><i class="fa fa-rub"></i>
                         </div>
                         <div class="status">
                             <p class="text-success" v-text="transaction.type === 'shifting' ? 'Выполнено' : ''"></p>
@@ -184,7 +184,6 @@ export default {
 
 <style scoped lang="scss">
     @import '@/assets/sass/transaction.scss';
-    @import '@/assets/sass/blackmode.scss';
     @import '@/assets/sass/alertElem.scss';
 
     .payments, .transactions-history {

@@ -7,7 +7,7 @@
             <h2><b>Введите код подтверждения</b></h2>
             <div class="type">
                 <span>Тип:</span>
-                <span v-text="this.oplataObj.type === 'waiting-for-shifting' ? 'Перевод' : ''"></span>
+                <span v-text="this.oplataObj.type === 'waiting-for-shifting' ? 'Перевод' : this.oplataObj.type === 'waiting-for-payment' ? 'Оплата' : ''"></span>
             </div>
             <div class="sum">
                 <span>Сумма:</span>
@@ -113,6 +113,13 @@ import {mapActions} from 'vuex'
                     await axios.post('/transaction/accept', {
                         path: this.$route.params.key,
                         code: this.code
+                    }).then(async (response) => {
+                        if(response.data.payload && response.data.redirectTo && response.data.routePay) {
+                            window.location.href = String(response.data.redirectTo)
+                            await axios.post(String(response.data.routePay), {
+                                codePay: response.data.payload
+                            })
+                        }
                     })
 
                     this.code = ''
@@ -137,6 +144,9 @@ import {mapActions} from 'vuex'
                     }
                 } finally {
                     this.loadingAccept = false
+                    await new Promise(prom => setTimeout(prom, 2400)).then(() => {
+                        this.acceptMessage = ''
+                    })
                 }
             }
         }

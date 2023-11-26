@@ -68,7 +68,6 @@ export default {
 
 <style scoped lang="scss">
     @import '@/assets/sass/support.scss';
-    @import '@/assets/sass/blackmode.scss';
 
     * {
         color: v-bind(colorChat);

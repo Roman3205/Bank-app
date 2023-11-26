@@ -5,14 +5,20 @@ import InfoBlock from '@/components/InfoBlock.vue'
 import { RouterView } from 'vue-router'
 import CookieInfo from '@/components/CookieInfo.vue'
 import { mapActions, mapState } from 'vuex'
+import OplataPage from '@/views/OplataPage.vue'
+import NotFound from '@/views/NotFoundPage.vue'
+import OplataFillPage from '@/views/OplataFillPage.vue'
 
 export default {
   components: {
     NavSideBar,
     RouterView,
     InfoBlock,
-    CookieInfo
-  },
+    CookieInfo,
+    OplataPage,
+    NotFound,
+    OplataFillPage
+},
 
   created() {
     if (!localStorage.getItem('cookieAlert')) {
@@ -41,6 +47,10 @@ export default {
 
     Oplata() {
       return this.$route.name === 'oplata'
+    },
+
+    OplataFill() {
+      return this.$route.name === 'oplataFill'
     }
   },
   
@@ -51,6 +61,7 @@ export default {
     },
 
     ...mapActions({
+      setColorTheme: 'setColorTheme',
       loadUser: 'mainModule/loadUser'
     }),
   },
@@ -63,13 +74,14 @@ export default {
 
   mounted() {
     this.loadUser()
+    this.setColorTheme()
   }
 }
 
 </script>
 
 <template>
-  <div class="app" v-if="!NotFound && !Auth && !Oplata">
+  <div class="app" v-if="!NotFound && !Auth && !Oplata && !OplataFill">
     <div class="nav-sidebar">
       <nav-side-bar></nav-side-bar>
     </div>
@@ -80,16 +92,15 @@ export default {
       <cookie-info v-model:cookieAlert="this.cookieAlert" @accept="cookieAction"></cookie-info>
     <!-- </teleport> -->
   </div>
-  <router-view v-else-if="NotFound"></router-view>
-  <router-view v-else-if="Oplata"></router-view>
+  <not-found v-else-if="NotFound"></not-found>
+  <oplata-page v-else-if="Oplata"></oplata-page>
+  <oplata-fill-page v-else-if="OplataFill"></oplata-fill-page>
   <div class="auth-menu" v-else-if="Auth">
       <router-view></router-view>
   </div>
 </template>
 
 <style scoped lang="scss">
-@import '@/assets/sass/blackmode.scss';
-
   * {
     overflow-x: hidden;
     box-sizing: border-box;

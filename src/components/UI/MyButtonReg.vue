@@ -23,7 +23,6 @@
 
         &:hover {
             opacity: 0.75;
-            color: #fff;
             border: 3px solid rgb(106, 167, 253);
         }
     }

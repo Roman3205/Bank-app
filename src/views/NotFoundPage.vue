@@ -3,10 +3,15 @@
 export default {
     methods: {
         routerAction(evt, goTo) {
+            evt.preventDefault()
             this.$router.push({
                 name: goTo
             })
         }
+    },
+
+    created() {
+        console.log('on');
     }
 }
 
@@ -14,15 +19,13 @@ export default {
 
 <template>
     <div class="container">
-        <img src="../assets/images/404.png" width="400" alt="">
+        <img src="@/assets/images/404.png" width="400" alt="">
         <h1>Страница не найдена</h1>
         <button class="btn btn-outline-primary" @click="routerAction($event, 'dashboard')">Вернуться на главную</button>
     </div>
 </template>
 
 <style scoped lang="scss">
-    @import '@/assets/sass/blackmode.scss';
-
     .container {
         width: 100%;
         height: 100vh;

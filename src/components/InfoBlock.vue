@@ -7,8 +7,6 @@
 </template>
 
 <style scoped lang="scss">
-@import '@/assets/sass/blackmode.scss';
-
     .container {
         text-align: center;
         display: flex;

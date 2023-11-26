@@ -39,7 +39,6 @@
 </script>
 
 <style lang="scss" scoped>
-@import '@/assets/sass/blackmode.scss';
     .cookie-alert-leave-from, .cookie-alert-leave-active {
         opacity: 1;
         transition: all 0.6s ease-in;

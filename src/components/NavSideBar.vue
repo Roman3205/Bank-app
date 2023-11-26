@@ -52,7 +52,11 @@ export default {
             background: state => state.background,
             sideBarColor: state => state.sideBarColor,
             user: state => state.mainModule.user
-        })
+        }),
+
+        isDark() {
+            return localStorage['colorTheme'] === 'dark'
+        }
     }
 }
 </script>
@@ -82,7 +86,7 @@ export default {
             <label for="switch">
                 Темный режим
                 <div class="form-check form-switch m-0 mt-1">
-                    <input @input="changeColorTheme($event)" class="form-check-input" type="checkbox" role="switch" id="switch" />
+                    <input :checked="isDark" @input="changeColorTheme($event)" class="form-check-input" type="checkbox" role="switch" id="switch" />
                 </div>
             </label>
         </my-button-bar>
@@ -111,7 +115,6 @@ export default {
 
 <style scoped lang="scss">
     @import '@/assets/sass/sidebar.scss';
-    @import '@/assets/sass/blackmode.scss';
     * {
         color: v-bind(sideBarColor);
     }

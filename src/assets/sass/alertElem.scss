@@ -17,3 +17,14 @@
     opacity: 1;
     transition: all .7s ease-out;
 }
+
+.alert-leave-to {
+    opacity: 0;
+    transition: all .7s ease-in;
+    transform: translateY(-50px);
+}
+
+.alert-leave-from {
+    opacity: 1;
+    transition: all .7s ease-in;
+}

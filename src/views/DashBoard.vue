@@ -114,7 +114,11 @@ export default {
 
                 let typedSpentTransactions = spentTransactions.filter(elem => elem.type == type)
 
-                console.log(spentTransactions.length, typedSpentTransactions.length);
+                console.log(typedSpentTransactions.length);
+                if (typedSpentTransactions.length == 0) {
+                    return -1
+                } 
+
                 let percentOfTransactions = spentTransactions.length / 100
                 
                 return typedSpentTransactions.length /  percentOfTransactions
@@ -196,16 +200,21 @@ export default {
                     <div class="blocks">
                         <div class="percent">
                             <svg viewBox="0 0 38 38" class="circular-chart pt-1" v-if="this.checkObj">
-                                <path class="circle" stroke-dasharray="0, 100" d="M18 2.0845
+                                <path class="circle" :stroke-dasharray="String(getSpentStat('wait-for-shifting'))" d="M18 2.0845
                                     a 15.9155 15.9155 0 0 1 0 31.831
                                     a 15.9155 15.9155 0 0 1 0 -31.831" />
-                                <path class="circle" stroke-dasharray="0, 100" d="M18 2.0845
+                                <path class="circle" :stroke-dasharray="String(getSpentStat('wait-for-shifting'))" d="M18 2.0845
                                     a 15.9155 15.9155 0 0 1 0 31.831
                                     a 15.9155 15.9155 0 0 1 0 -31.831" />
                                 <path class="circle" :stroke-dasharray="String(getSpentStat('shifting'))" d="M18 2.0845
                                     a 15.9155 15.9155 0 0 1 0 31.831
                                     a 15.9155 15.9155 0 0 1 0 -31.831" />
-                                <path class="circle" stroke-dasharray="0, 100" d="M18 2.0845
+                                <path class="circle" :stroke-dasharray="String(getSpentStat('wait-for-shifting'))" d="M18 2.0845
+                                    a 15.9155 15.9155 0 0 1 0 31.831
+                                    a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                <path class="circle" v-if="
+                                String(getSpentStat('wait-for-shifting')) == -1 && 
+                                String(getSpentStat('shifting')) == -1" stroke-dasharray="100" d="M18 2.0845
                                     a 15.9155 15.9155 0 0 1 0 31.831
                                     a 15.9155 15.9155 0 0 1 0 -31.831" />
                             </svg>
@@ -254,8 +263,8 @@ export default {
                             <div class="id">
                                 {{ transaction.uniqueNumber }}
                             </div>
-                            <div class="money rub-m">
-                                <b>{{ transaction.money }}</b><i class="fa fa-rub"></i>
+                            <div class="money rub-m" :style="transaction.senderCard == card.uniqueNumber ? {color: 'green'} : {color: 'red'}">
+                                <b><i v-text="transaction.senderCard == card.uniqueNumber ? '+' : '-'"></i>{{ transaction.money }}</b><i class="fa fa-rub"></i>
                             </div>
                             <div class="status">
                                 <p class="text-success" v-text="transaction.type === 'shifting' ? 'Выполнено' : ''"></p>
@@ -270,7 +279,6 @@ export default {
 
 <style scoped lang="scss">
     @import '@/assets/sass/dashboard.scss';
-    @import '@/assets/sass/blackmode.scss';
     .finance, .statistics, .transactions-history, .wallet-block, .spent-diagram {
         background-color: v-bind(backgroundBlock);
     }
