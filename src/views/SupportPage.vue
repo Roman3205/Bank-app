@@ -17,7 +17,8 @@ export default {
         return {
             textPrompt: '',
             loadingReq: false,
-            messages: []
+            messages: [],
+            showWarn: false
         }
     },
 
@@ -38,7 +39,9 @@ export default {
 
         async postMessage() {
             try {
-                if (this.textPrompt !== '') {
+                if(this.textPrompt.length > 100) {
+                    this.showWarn = true
+                } else if (this.textPrompt !== '') {
                     this.loadingReq = true
                     await axios.post('/support/ask', {
                         prompt: this.textPrompt
@@ -121,6 +124,7 @@ export default {
                             </svg>
                         </div>
                     </form>
+                    <div v-if="showWarn" class="alert alert-danger w-100 text-center mt-3 p-0 pt-2" style="height: 40px;">Максимальная длина вопроса - 100 токенов</div>
                 </div>
             </div>
         </div>
