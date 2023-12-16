@@ -80,11 +80,15 @@ export default {
 
             } catch (error) {
                 if(error.response) {
-                    this.createMessage = error.response.data
+                    this.createMessage = error.response.data.message
                     console.log('Ошибка при отправке запроса на сервер:(', error)
                     return this.loadingCreate = false
-                } else {
+                } else if (error.response.data.errors.length != 0) {
+                    this.createMessage = error.response.data.errors.map(error => error.msg).join(', ')
+                    console.log('Ошибка при отправке запроса на сервер:(', error)
                     return this.loadingCreate = false
+                }else {
+                    return
                 }
             } finally {
                 await new Promise(prom => setTimeout(prom, 2400)).then(() => {
@@ -181,8 +185,10 @@ export default {
                         </div>
                     </div>
                 </div>
+                <p v-else class="text-center pt-3"><b>По выбранной карте нет транзакций</b></p>
             </div>
         </div>
+        <p v-else class="text-center pt-3"><b>У вас нет ни одной карты</b></p>
     </div>
 </template>
 

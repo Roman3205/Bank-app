@@ -6,7 +6,7 @@ import TransactionsPage from '@/views/TransactionsPage.vue'
 import LoginPage from '@/views/LoginPage.vue'
 import SingUpPage from '@/views/SignUpPage.vue'
 import NotFoundPage from '@/views/NotFoundPage.vue'
-import RestorePage from '@/views/RestorePage.vue'
+import ActivatePage from '@/views/ActivatePage.vue'
 import OplataFillPage from '@/views/OplataFillPage.vue'
 
 let router = createRouter({
@@ -23,9 +23,9 @@ let router = createRouter({
             component: DashBoard
         },
         {
-            path: '/restore-password',
-            name: 'restore',
-            component: RestorePage
+            path: '/activate/:link',
+            name: 'activate',
+            component: ActivatePage
         },
         {
             path: '/cards',
@@ -78,7 +78,7 @@ let avoidRoutes = [
 ]
 
 router.beforeEach((from, to, next) => {
-    if(!window.$cookies.isKey('cookie-auth') && avoidRoutes.includes(from.name)) {
+    if(!window.$cookies.isKey('token') && avoidRoutes.includes(from.name)) {
         router.push('/login')
     } else {
         next()

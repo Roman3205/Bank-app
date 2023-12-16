@@ -4,7 +4,6 @@
             <div class="logo">
                 <img src="@/assets/images/logo-main.png" width="300" alt="">
             </div>
-            <!-- <h2>роут для пополнение баланса на сервак маркетплейса, сумма пополнения</h2> -->
             <h2><b>Введите данные карты</b></h2>
             <my-input-card  maxlength="16" v-model.number="cardNum" placeholder="Номер карты"></my-input-card>
             <div class="card-text d-flex gap-3 flex-row-reverse">
@@ -73,9 +72,13 @@ export default {
                         this.$router.push({name: 'oplata', params: {key: response.data.oplata}})
                     })
                 } catch (error) {
-                    if(error.response && error.response) {
-                        this.loadingMessage = error.response.data
-                    } else {
+                    if(error.response) {
+                        this.loadingMessage = error.response.data.message
+                        console.log('Ошибка при отправке запроса на сервер:(', error)
+                    } else if (error.response.data.errors.length != 0) {
+                        this.loadingMessage = error.response.data.errors.map(error => error.msg).join(', ')
+                        console.log('Ошибка при отправке запроса на сервер:(', error)
+                    }else {
                         return
                     }
                 } finally {

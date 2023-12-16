@@ -15,9 +15,9 @@ let mainModule = {
         async loadUser({commit}) {
             try {
                 let response = await axios.get('/user/main')
-                commit('setUser', response.data)
+                commit('setUser', response?.data)
             } catch (error) {
-                console.log(error.response.data)
+                console.log(error.response?.data)
             }
         }
     },

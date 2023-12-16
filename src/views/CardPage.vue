@@ -67,7 +67,7 @@
                 createMessage: '',
                 deleteMessage: '',
                 loadingCreate: undefined,
-                loadingDelete: undefined,
+                loadingDelete: false,
                 showWarning: false,
                 warningCard: ''
             }
@@ -102,29 +102,35 @@
             }),
 
             async deleteCard(id) {
-                this.loadingDelete = true
                 try {
                     this.closeWarningFunc()
                     this.deleteMessage = ''
-
-                    await axios.post('/card/delete', {
-                        cardId: id
+                    this.loadingDelete = true
+                    if(!id) {
+                        return
+                    }
+                    await axios.delete('/card/delete', {
+                        params: {
+                            cardId: id
+                        }
                     })
-                    this.loadingDelete = false
-
                     this.deleteMessage = 'Карта закрыта'
                     this.loadUser()
-
                     await new Promise(prom => setTimeout(prom, 1300)).then(() => {
                         this.deleteMessage = ''
+                        this.loadingDelete = false
                     })
 
                 } catch (error) {
                     if(error.response) {
-                        this.deleteMessage = error.response.data
+                        this.deleteMessage = error.response.data.message
                         console.log('Ошибка при отправке запроса на сервер:(', error)
                         return this.loadingDelete = false
-                    } else {
+                    } else if (error.response.data.errors.length != 0) {
+                        this.deleteMessage = error.response.data.errors.map(error => error.msg).join(', ')
+                        console.log('Ошибка при отправке запроса на сервер:(', error)
+                        return this.loadingDelete = false
+                    }else {
                         return
                     }
                 } finally {
@@ -155,9 +161,6 @@
                     }
 
                     await axios.post('/card/create', {
-                        name: this.user.firstName,
-                        surname: this.user.lastName,
-                        patronymic: this.user.patronymic,
                         date: this.date,
                         tel: this.tel
                     })
@@ -174,10 +177,14 @@
                     })
                 } catch (error) {
                     if(error.response) {
-                        this.createMessage = error.response.data
+                        this.createMessage = error.response.data.message
                         console.log('Ошибка при отправке запроса на сервер:(', error)
                         return this.loadingCreate = false
-                    } else {
+                    } else if (error.response.data.errors.length != 0) {
+                        this.createMessage = error.response.data.errors.map(error => error.msg).join(', ')
+                        console.log('Ошибка при отправке запроса на сервер:(', error)
+                        return this.loadingCreate = false
+                    }else {
                         return
                     }
                 } finally {

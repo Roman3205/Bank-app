@@ -50,7 +50,7 @@ export default {
                     }
                 })
 
-                this.card = {...response.data}
+                this.card = {...response.data.card}
             } catch (error) {
                 if(error.response) {
                     console.log('Ошибка при отправке запроса на сервер:(', error.response)
@@ -219,6 +219,7 @@ export default {
                             <div class="text-block-info w-50" v-if="this.checkObj">
                                 <h3 class="text-center w-100"><b :style="this.getStatistics(0, 'spent') <= 9999 ? {fontSize: '25px'} : this.getStatistics(0, 'spent') >= 10000 && this.getStatistics(0, 'spent') <= 99999 ? {fontSize: '21px'} : this.getStatistics(0, 'spent') >= 100000 ? {fontSize: '18px'} : {}">{{ getStatistics(0, 'spent') }}</b><b><i class="fa fa-rub" style="font-size: 20px; padding-left: 5px;"></i></b></h3>
                             </div>
+                            <p v-else class="text-center pt-3"><b>У вас нет ни одной карты</b></p>
                         </div>
                         <div class="withdraw">
                             <div class="category">
@@ -269,6 +270,7 @@ export default {
                             </div>
                         </div>
                     </div>
+                    <p v-else class="text-center pt-3"><b>У вас нет ни одной карты</b></p>
                 </div>
             </div>
         </div>

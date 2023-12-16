@@ -32,9 +32,6 @@ export default {
                     return this.loadingSignUp = false
                 }
 
-                await axios.post('/logout')
-                this.$cookies.remove('cookie-auth', '/', '')
-
                 await axios.post('/registration', {
                     name: this.name,
                     mail: this.mail,
@@ -45,23 +42,28 @@ export default {
                 this.mail = ''
                 this.password = ''
                 this.loadingSignUp = false
-                this.regMessage = 'Регистрация прошла успешно'
+                this.regMessage = 'Успешная регистрация, проверьте почту'
 
-                await new Promise(prom => setTimeout(prom, 900)).then(() => {
+                await new Promise(prom => setTimeout(prom, 4000)).then(() => {
                     this.$router.push('/login')
                 })
 
             } catch (error) {
                 if(error.response) {
-                    this.loginMessage = error.response.data
+                    this.regMessage = error.response.data.message
                     console.log('Ошибка при отправке запроса на сервер:(', error)
                     return this.loadingSignUp = false
-                } else {
+                } else if (error.response.data.errors.length != 0) {
+                    this.regMessage = error.response.data.errors.map(error => error.msg).join(', ')
+                    console.log('Ошибка при отправке запроса на сервер:(', error)
+                    return this.loadingSignUp = false
+                }else {
                     return
                 }
             } finally {
                 await new Promise(prom => setTimeout(prom, 2400)).then(() => {
                     this.regMessage = ''
+                    this.loadingSignUp = false
                 })
             }
         },
@@ -76,7 +78,7 @@ export default {
 
     computed: {
         regValid() {
-            return this.name === '' || this.password === '' || this.mail === '' || this.password.length < 5 || this.name.length < 2
+            return this.name === '' || this.password === '' || this.mail === '' || this.password.length < 5 || this.name.length < 2 || this.password.length > 32
         }
     }
 }
@@ -94,7 +96,7 @@ export default {
                 <my-input v-model="passwordConfirm" type="password" placeholder="Подтвердите пароль"></my-input>
                 <my-button-reg :disabled="loadingSignUp">Зарегистрироваться</my-button-reg>
             </form>
-            <transition name="alert"><div v-if="this.regMessage !== ''" data-67cdadw class="alert text-center" :class="this.regMessage === 'Регистрация прошла успешно' ? 'alert-success' : 'alert-danger'">{{ regMessage }}</div></transition>
+            <transition name="alert"><div v-if="this.regMessage !== ''" data-67cdadw class="alert text-center" :class="this.regMessage === 'Успешная регистрация, проверьте почту' ? 'alert-success' : 'alert-danger'">{{ regMessage }}</div></transition>
         </div>
         <info-block></info-block>
     </div>

@@ -86,11 +86,11 @@ import {mapActions} from 'vuex'
                         }
                     })
 
-                    this.oplataObj = response.data
+                    this.oplataObj = response.data.transaction
                 } catch (error) {
-                    if(error.response && error.response.status !== 409) {
-                        console.log('Ошибка при отправке запроса на сервер:(\n', error.response.data)
-                    } else if(error.response && error.response.status === 409) {
+                    if(error.response && error.response.data.message !== 'Транзакции не существует') {
+                        console.log('Ошибка при отправке запроса на сервер:(', error.response.data)
+                    } else if (error.response.data.message === 'Транзакции не существует') {
                         this.$router.push('/notfound')
                     } else {
                         return
@@ -114,11 +114,12 @@ import {mapActions} from 'vuex'
                         path: this.$route.params.key,
                         code: this.code
                     }).then(async (response) => {
-                        if(response.data.payload && response.data.redirectTo && response.data.routePay) {
-                            await axios.post(String(response.data.routePay), {
-                                codePay: response.data.payload
+                        console.log(response.data);
+                        if(response.data.data.payload && response.data.data.redirectTo && response.data.data.routePay) {
+                            await axios.post(String(response.data.data.routePay), {
+                                codePay: response.data.data.payload
                             }).then(() => {
-                                window.location.href = String(response.data.redirectTo)
+                                window.location.href = String(response.data.data.redirectTo)
                             })
                         } else {
                             this.code = ''
@@ -131,14 +132,15 @@ import {mapActions} from 'vuex'
                         }
                     })
                 } catch (error) {
-                    if(error.response && error.response.status === 409 && error.response.data !== 'Транзакции не существует') {
+                    if(error.response && error.response.data.message !== 'Транзакции не существует') {
                         console.log('Ошибка при отправке запроса на сервер:(\n', error.response.data)
-                        this.acceptMessage= 'Неверный код подтверждения'
-                    } else if(error.response.status === 404) {
-                        this.acceptMessage = error.response.data
+                        this.acceptMessage = error.response.data.message
+                    } else if (error.response.data.errors.length != 0) {
+                        console.log('Ошибка при отправке запроса на сервер:(', error.response.data)
+                        this.acceptMessage = error.response.data.errors.map(error => error.msg).join(', ')
                         await promReturn()
-                    } else if(error.response.data === 'Транзакции не существует') {
-                        this.acceptMessage = error.response.data
+                    } else if(error.response.data.message === 'Транзакции не существует' || error.response.data.message === 'Операция больше недействительна, так как время на ввод кода закончилось') {
+                        this.acceptMessage = error.response.data.message
                         await promReturn()
                     } else {
                         return

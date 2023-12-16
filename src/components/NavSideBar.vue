@@ -35,7 +35,8 @@ export default {
                 await axios.post('/logout')
 
                 await new Promise(prom => setTimeout(prom, 900)).then(() => {
-                    this.$cookies.remove('cookie-auth', '/', '')
+                    this.$cookies.remove('token')
+                    localStorage.removeItem('token')
                     this.setUser({})
                     this.$router.push('/login')
                 })

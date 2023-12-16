@@ -35,20 +35,20 @@ export default {
       background: state => state.background
     }),
 
+    OplataFill() {
+      return this.$route.name === 'oplataFill'
+    },
+
     NotFound() {
       return this.$route.name === 'notfound'
     },
 
     Auth() {
-      return this.$route.name === 'login' || this.$route.name === 'register' || this.$route.name === 'restore'
+      return this.$route.name === 'login' || this.$route.name === 'register' || this.$route.name === 'activate'
     },
 
     Oplata() {
       return this.$route.name === 'oplata'
-    },
-
-    OplataFill() {
-      return this.$route.name === 'oplataFill'
     }
   },
   

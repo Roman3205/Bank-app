@@ -39,7 +39,7 @@ export default {
 
         async postMessage() {
             try {
-                if(this.textPrompt.length > 100) {
+                if(this.textPrompt.length > 250) {
                     this.showWarn = true
                 } else if (this.textPrompt !== '') {
                     this.loadingReq = true
@@ -58,6 +58,7 @@ export default {
                 }
             } finally {
                 this.loadingReq = false
+                this.showWarn = false
             }
         },
 
@@ -92,7 +93,7 @@ export default {
                     </div>
                 </div>
                 <div class="messages-container">
-                    <h5 style="text-align: center;" v-if="this.messages.length == 0">Сообщений пока нет</h5>
+                    <h5 class="h5-no-messages" style="text-align: center;" v-if="this.messages.length == 0">Сообщений пока нет</h5>
                     <section v-for="message, index in messages" :key="index">
                         <div class="message-r">
                             <div class="writer">
@@ -124,7 +125,7 @@ export default {
                             </svg>
                         </div>
                     </form>
-                    <div v-if="showWarn" class="alert alert-danger w-100 text-center mt-3 p-0 pt-2" style="height: 40px;">Максимальная длина вопроса - 100 токенов</div>
+                    <div v-if="showWarn" class="alert alert-danger w-100 text-center mt-3 p-0 pt-2" style="height: 40px;">Максимальная длина вопроса - 250 токенов</div>
                 </div>
             </div>
         </div>
